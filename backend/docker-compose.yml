@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  # Backend API
+  api:
+    build: .
+    container_name: industrial-ai-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./industrial_troubleshooting.db
+      - VECTOR_DB_PATH=/app/data/vector_store
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GROQ_MODEL=llama3-70b-8192
+      - LLM_PROVIDER=groq
+    volumes:
+      - ./uploads:/app/uploads
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./industrial_troubleshooting.db:/app/industrial_troubleshooting.db
+    networks:
+      - ai-network
+    restart: unless-stopped
+
+networks:
+  ai-network:
+    driver: bridge
