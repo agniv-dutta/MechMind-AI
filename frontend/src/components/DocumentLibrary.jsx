@@ -12,12 +12,10 @@ import {
   CheckCircle2, 
   Loader2, 
   FileCode, 
-  Cpu,
-  Layers,
-  Image as ImageIcon
+  Layers
 } from 'lucide-react';
 
-export default function DocumentLibrary({ onOpenUpload }) {
+export default function DocumentLibrary({ onOpenUpload, onSelectDocument }) {
   const [viewMode, setViewMode] = useState('grid');
   const [searchVal, setSearchVal] = useState('');
 
@@ -102,12 +100,15 @@ export default function DocumentLibrary({ onOpenUpload }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         
         {/* Card 1: B-42 Turbine Maintenance Manual */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between">
+        <div 
+          onClick={onSelectDocument}
+          className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between cursor-pointer group"
+        >
           <div>
             {/* Thumbnail Section */}
             <div className="h-36 bg-gradient-to-tr from-slate-950 via-slate-900 to-blue-950 p-4 relative overflow-hidden flex items-center justify-center border-b border-slate-800">
               <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px] opacity-20"></div>
-              <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg relative z-10 font-bold font-mono text-xs">
+              <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg relative z-10 font-bold font-mono text-xs group-hover:scale-110 transition-transform">
                 <FileText className="w-6 h-6" />
               </div>
               <span className="absolute bottom-2 left-3 text-[10px] font-mono text-blue-300/80 uppercase">
@@ -118,7 +119,7 @@ export default function DocumentLibrary({ onOpenUpload }) {
             {/* Content Area */}
             <div className="p-5 space-y-2">
               <div className="flex items-start justify-between">
-                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base leading-snug">
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base leading-snug group-hover:text-teal-600 dark:group-hover:text-teal-300 transition-colors">
                   B-42 Turbine Maintenance Manual
                 </h3>
                 <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
@@ -150,12 +151,15 @@ export default function DocumentLibrary({ onOpenUpload }) {
         </div>
 
         {/* Card 2: Centrifugal Pump P&ID Diagrams */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between">
+        <div 
+          onClick={onSelectDocument}
+          className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between cursor-pointer group"
+        >
           <div>
             {/* Thumbnail Section */}
             <div className="h-36 bg-gradient-to-tr from-slate-950 via-slate-900 to-amber-950 p-4 relative overflow-hidden flex items-center justify-center border-b border-slate-800">
               <div className="absolute inset-0 bg-[radial-gradient(#fbbf24_1px,transparent_1px)] [background-size:16px_16px] opacity-20"></div>
-              <div className="w-12 h-12 rounded-full bg-amber-600 text-white flex items-center justify-center shadow-lg relative z-10 font-bold font-mono text-xs">
+              <div className="w-12 h-12 rounded-full bg-amber-600 text-white flex items-center justify-center shadow-lg relative z-10 font-bold font-mono text-xs group-hover:scale-110 transition-transform">
                 <Layers className="w-6 h-6" />
               </div>
               <span className="absolute bottom-2 left-3 text-[10px] font-mono text-amber-300/80 uppercase">
@@ -166,7 +170,7 @@ export default function DocumentLibrary({ onOpenUpload }) {
             {/* Content Area */}
             <div className="p-5 space-y-2">
               <div className="flex items-start justify-between">
-                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base leading-snug">
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base leading-snug group-hover:text-teal-600 dark:group-hover:text-teal-300 transition-colors">
                   Centrifugal Pump P&ID Diagrams
                 </h3>
                 <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
@@ -201,12 +205,15 @@ export default function DocumentLibrary({ onOpenUpload }) {
         </div>
 
         {/* Card 3: Control System Reboot Sequence */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between">
+        <div 
+          onClick={onSelectDocument}
+          className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between cursor-pointer group"
+        >
           <div>
             {/* Thumbnail Section */}
             <div className="h-36 bg-gradient-to-tr from-slate-950 via-slate-900 to-purple-950 p-4 relative overflow-hidden flex items-center justify-center border-b border-slate-800">
               <div className="absolute inset-0 bg-[radial-gradient(#c084fc_1px,transparent_1px)] [background-size:16px_16px] opacity-20"></div>
-              <div className="w-12 h-12 rounded-full bg-purple-600 text-white flex items-center justify-center shadow-lg relative z-10 font-bold font-mono text-xs">
+              <div className="w-12 h-12 rounded-full bg-purple-600 text-white flex items-center justify-center shadow-lg relative z-10 font-bold font-mono text-xs group-hover:scale-110 transition-transform">
                 <FileCode className="w-6 h-6" />
               </div>
               <span className="absolute bottom-2 left-3 text-[10px] font-mono text-purple-300/80 uppercase">
@@ -217,7 +224,7 @@ export default function DocumentLibrary({ onOpenUpload }) {
             {/* Content Area */}
             <div className="p-5 space-y-2">
               <div className="flex items-start justify-between">
-                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base leading-snug">
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base leading-snug group-hover:text-teal-600 dark:group-hover:text-teal-300 transition-colors">
                   Control System Reboot Sequence
                 </h3>
                 <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
