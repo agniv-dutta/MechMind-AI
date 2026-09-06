@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-brand-cyan: #5EEAD4;
+    --color-brand-teal: #6EE7B7;
+    --color-user-bubble: #1E293B;
+  }
+
+  body {
+    @apply antialiased text-slate-800 bg-slate-50 dark:bg-slate-950 dark:text-slate-100 font-sans selection:bg-teal-300 selection:text-slate-900;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  }
+
+  #root {
+    width: 100%;
+    min-height: 100vh;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.7);
+}
+
+/* Glowing Animations */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2.5s infinite ease-in-out;
+}
+
+@keyframes highlight-flash {
+  0% { background-color: rgba(94, 234, 212, 0.35); transform: translateY(-2px); }
+  100% { background-color: transparent; transform: translateY(0); }
+}
+
+.citation-target-highlight {
+  animation: highlight-flash 1.8s ease-out;
+}
