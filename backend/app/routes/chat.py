@@ -145,8 +145,9 @@ async def get_chat_history(session_id: str, db: Session = Depends(get_db)):
 
 @router.post("/stream")
 async def stream_chat(request: ChatRequest):
-    """WebSocket or SSE endpoint for real-time streaming"""
+    """SSE endpoint for real-time streaming with sources metadata"""
     from fastapi.responses import StreamingResponse
+    import json as jsonlib
     
     async def generate():
         try:
@@ -159,9 +160,22 @@ async def stream_chat(request: ChatRequest):
             # Retrieve context
             rag_context = rag_service.retrieve_context(
                 query=request.query,
-                k=5,
-                search_mode=request.search_mode
+                k=request.filters.get('k', 5) if request.filters else 5,
+                search_mode=request.search_mode,
+                filters=request.filters if request.filters else None
             )
+            
+            # Emit sources metadata before tokens
+            sources = [
+                {
+                    "source_doc": c.source_doc,
+                    "page": c.page,
+                    "excerpt": c.content[:200],
+                    "confidence": c.score
+                }
+                for c in rag_context.retrieved_chunks
+            ]
+            yield f"data: {jsonlib.dumps({'type': 'metadata', 'sources': sources, 'sources_used': rag_context.sources})}\n\n"
             
             # Generate prompts
             prompts = rag_service.generate_prompts(request.query, rag_context)
@@ -171,9 +185,16 @@ async def stream_chat(request: ChatRequest):
                 query=request.query,
                 context=prompts.user_prompt
             ):
-                yield f"data: {chunk}\n\n"
+                event = dict(chunk)
+                if event.get('type') == 'token':
+                    yield f"data: {jsonlib.dumps(event)}\n\n"
+                elif event.get('type') == 'error':
+                    yield f"data: {jsonlib.dumps(event)}\n\n"
+                    return
+                else:
+                    yield f"data: {jsonlib.dumps(event)}\n\n"
             
         except Exception as e:
-            yield f"data: {{'error': '{str(e)}'}}\n\n"
+            yield f"data: {jsonlib.dumps({'type': 'error', 'content': str(e)})}\n\n"
     
     return StreamingResponse(generate(), media_type="text/event-stream")

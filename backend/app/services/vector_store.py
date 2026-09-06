@@ -1,6 +1,8 @@
 import os
 import json
 import pickle
+import hashlib
+import math
 from typing import List, Dict, Any, Optional
 import numpy as np
 from datetime import datetime
@@ -11,9 +13,72 @@ try:
 except ImportError:
     FAISS_AVAILABLE = False
 
-from sentence_transformers import SentenceTransformer
+try:
+    from sentence_transformers import SentenceTransformer
+    SENTENCE_TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    SENTENCE_TRANSFORMERS_AVAILABLE = False
 
 from app.config import settings
+
+
+class HashEmbedder:
+    """Deterministic, dependency-free fallback embedding model.
+
+    Produces a normalized pseudo-embedding of `settings.EMBEDDING_DIMENSION`
+    dimensions from token hashes. This keeps the vector store fully functional
+    when sentence-transformers/torch are not installed. Semantic quality is
+    lower than a real model, but hybrid + keyword search still work well.
+    Caches embeddings so repeated texts are cheap.
+    """
+
+    def __init__(self, dimension: int = 384):
+        self.dimension = dimension
+        self.cache = {}
+
+    def _features(self, text: str) -> np.ndarray:
+        tokens = text.lower().split()
+        vec = np.zeros(self.dimension, dtype=np.float32)
+        for tok in tokens[:1024]:
+            h = int(hashlib.md5(tok.encode("utf-8")).hexdigest()[:8], 16)
+            idx = h % self.dimension
+            sign = 1.0 if (h >> 16) % 2 == 0 else -1.0
+            vec[idx] += sign
+        n = np.linalg.norm(vec)
+        return vec / n if n > 0 else vec
+
+    def encode(self, text, convert_to_numpy=False):
+        if isinstance(text, str):
+            key = hash(text)
+            if key not in self.cache:
+                self.cache[key] = self._features(text)
+            return self.cache[key]
+        # batch
+        return np.stack([self._features(t) for t in text])
+
+
+def get_embedding_model(model_name: str, dimension: int):
+    """Return a real sentence-transformer or a safe fallback embedder."""
+    if SENTENCE_TRANSFORMERS_AVAILABLE:
+        try:
+            return _STModel(model_name)
+        except Exception as e:
+            print(f"Warning: could not load '{model_name}' ({e}). Using hash fallback embedder.")
+    else:
+        print("Note: sentence-transformers not installed. Using hash fallback embedder "
+              f"({dimension}d). Install 'sentence-transformers' for higher quality embeddings.")
+    return HashEmbedder(dimension)
+
+
+class _STModel:
+    """Thin wrapper around a loaded SentenceTransformer."""
+
+    def __init__(self, model_name: str):
+        self.model = SentenceTransformer(model_name)
+        self.dimension = self.model.get_sentence_embedding_dimension()
+
+    def encode(self, texts, convert_to_numpy=False):
+        return self.model.encode(texts, convert_to_numpy=convert_to_numpy)
 
 
 class SearchResult:
@@ -47,15 +112,11 @@ class EmbeddingService:
         self.cache = {}  # Simple cache for embeddings
         
     def load_model(self):
-        """Load the embedding model"""
+        """Load the embedding model (real model or fallback)"""
         if self.model is None:
-            try:
-                self.model = SentenceTransformer(self.model_name)
-                # Update dimension based on actual model
-                self.dimension = self.model.get_sentence_embedding_dimension()
-            except Exception as e:
-                print(f"Error loading embedding model: {e}")
-                raise
+            self.model = get_embedding_model(self.model_name, self.dimension)
+            if isinstance(self.model, _STModel):
+                self.dimension = self.model.dimension
     
     def embed_text(self, text: str) -> List[float]:
         """Generate embedding for a single text"""
@@ -69,11 +130,12 @@ class EmbeddingService:
         
         try:
             embedding = self.model.encode(text, convert_to_numpy=True)
-            embedding_list = embedding.tolist()
-            
+            if isinstance(embedding, np.ndarray):
+                embedding_list = embedding.tolist()
+            else:
+                embedding_list = list(embedding)
             # Cache the result
             self.cache[cache_key] = embedding_list
-            
             return embedding_list
         except Exception as e:
             print(f"Error generating embedding: {e}")
@@ -86,10 +148,53 @@ class EmbeddingService:
         
         try:
             embeddings = self.model.encode(texts, convert_to_numpy=True)
-            return embeddings.tolist()
+            if isinstance(embeddings, np.ndarray):
+                return embeddings.tolist()
+            return [list(e) for e in embeddings]
         except Exception as e:
             print(f"Error generating batch embeddings: {e}")
             return [[0.0] * self.dimension for _ in texts]
+
+
+class NumpyIndex:
+    """Dependency-free brute-force index that mimics the FAISS API subset used here.
+
+    Provides add/search/ntotal and pickling so the whole vector pipeline works
+    without the faiss native package. Good for local development and CI.
+    """
+
+    def __init__(self, dimension: int):
+        self.dimension = dimension
+        self.vectors = np.zeros((0, dimension), dtype=np.float32)
+
+    @property
+    def ntotal(self) -> int:
+        return self.vectors.shape[0]
+
+    def add(self, embeddings):
+        arr = np.asarray(embeddings, dtype=np.float32)
+        if arr.ndim == 1:
+            arr = arr.reshape(1, -1)
+        self.vectors = np.vstack([self.vectors, arr])
+
+    def search(self, query, k: int):
+        arr = np.asarray(query, dtype=np.float32)
+        k = min(k, self.ntotal)
+        if k == 0:
+            return np.zeros((arr.shape[0], 0), dtype=np.float32), np.full((arr.shape[0], 0), -1, dtype=np.int64)
+        # Cosine-based distance for normalized vectors
+        q_norm = arr / (np.linalg.norm(arr, axis=1, keepdims=True) + 1e-12)
+        v_norm = self.vectors / (np.linalg.norm(self.vectors, axis=1, keepdims=True) + 1e-12)
+        sims = q_norm @ v_norm.T
+        # Convert similarity (range ~ -1..1) to a FAISS-like L2 distance for the callsite
+        distances = np.sqrt(np.maximum(2.0 - 2.0 * sims, 0.0))
+        indices = np.full((arr.shape[0], k), -1, dtype=np.int64)
+        for row_i in range(sims.shape[0]):
+            top = np.argpartition(sims[row_i], -k)[-k:]
+            top = top[np.argsort(-sims[row_i][top])]
+            indices[row_i] = top
+            distances[row_i] = distances[row_i][top]
+        return distances, indices
 
 
 class VectorStore:
@@ -98,6 +203,7 @@ class VectorStore:
     def __init__(self):
         self.embedding_service = EmbeddingService()
         self.index = None
+        self.index_type = "numpy"
         self.metadata = {}  # chunk_id -> metadata mapping
         self.dimension = settings.EMBEDDING_DIMENSION
         self.vector_db_path = settings.VECTOR_DB_PATH
@@ -110,11 +216,8 @@ class VectorStore:
         """Initialize the vector store"""
         if embedding_model:
             self.embedding_service = EmbeddingService(embedding_model)
-            self.embedding_service.load_model()
-            self.dimension = self.embedding_service.dimension
-        else:
-            self.embedding_service.load_model()
-            self.dimension = self.embedding_service.dimension
+        self.embedding_service.load_model()
+        self.dimension = self.embedding_service.dimension
         
         # Try to load existing index
         self._load_index()
@@ -126,36 +229,40 @@ class VectorStore:
         self.initialized = True
     
     def _create_index(self):
-        """Create a new FAISS index"""
-        if not FAISS_AVAILABLE:
-            print("FAISS not available. Vector store will not function properly.")
-            return
+        """Create a new index (FAISS or numpy fallback)"""
+        if FAISS_AVAILABLE:
+            try:
+                self.index = faiss.IndexFlatL2(self.dimension)
+                self.index_type = "faiss"
+                print(f"Created new FAISS index with dimension {self.dimension}")
+                return
+            except Exception as e:
+                print(f"Error creating FAISS index: {e}, falling back to numpy index")
         
-        try:
-            # Create IndexFlatL2 for L2 distance (Euclidean)
-            self.index = faiss.IndexFlatL2(self.dimension)
-            print(f"Created new FAISS index with dimension {self.dimension}")
-        except Exception as e:
-            print(f"Error creating FAISS index: {e}")
+        self.index = NumpyIndex(self.dimension)
+        self.index_type = "numpy"
+        print(f"Created numpy fallback index with dimension {self.dimension}")
     
     def _load_index(self):
         """Load existing index from disk"""
-        if not FAISS_AVAILABLE:
-            return
-        
         try:
             index_path = os.path.join(self.vector_db_path, "faiss.index")
+            numpy_path = os.path.join(self.vector_db_path, "numpy.index.pkl")
             metadata_path = os.path.join(self.vector_db_path, "metadata.pkl")
             
-            if os.path.exists(index_path) and os.path.exists(metadata_path):
-                # Load index
-                self.index = faiss.read_index(index_path)
-                
-                # Load metadata
+            if os.path.exists(metadata_path):
                 with open(metadata_path, 'rb') as f:
                     self.metadata = pickle.load(f)
-                
+            
+            if FAISS_AVAILABLE and os.path.exists(index_path):
+                self.index = faiss.read_index(index_path)
+                self.index_type = "faiss"
                 print(f"Loaded existing FAISS index with {self.index.ntotal} vectors")
+            elif os.path.exists(numpy_path):
+                with open(numpy_path, 'rb') as f:
+                    self.index = pickle.load(f)
+                self.index_type = "numpy"
+                print(f"Loaded existing numpy index with {self.index.ntotal} vectors")
         except Exception as e:
             print(f"Error loading index: {e}")
             self.index = None
@@ -163,21 +270,21 @@ class VectorStore:
     
     def _save_index(self):
         """Save index to disk"""
-        if not FAISS_AVAILABLE or self.index is None:
+        if self.index is None or self.index.ntotal == 0:
             return
         
         try:
-            index_path = os.path.join(self.vector_db_path, "faiss.index")
             metadata_path = os.path.join(self.vector_db_path, "metadata.pkl")
-            
-            # Save index
-            faiss.write_index(self.index, index_path)
-            
-            # Save metadata
             with open(metadata_path, 'wb') as f:
                 pickle.dump(self.metadata, f)
             
-            print(f"Saved FAISS index with {self.index.ntotal} vectors")
+            if self.index_type == "faiss" and FAISS_AVAILABLE:
+                faiss.write_index(self.index, os.path.join(self.vector_db_path, "faiss.index"))
+            else:
+                with open(os.path.join(self.vector_db_path, "numpy.index.pkl"), 'wb') as f:
+                    pickle.dump(self.index, f)
+            
+            print(f"Saved index with {self.index.ntotal} vectors (type={self.index_type})")
         except Exception as e:
             print(f"Error saving index: {e}")
     
@@ -195,10 +302,6 @@ class VectorStore:
             
             # Convert to numpy array
             embedding_array = np.array(embeddings, dtype=np.float32)
-            
-            # Add to index
-            if not FAISS_AVAILABLE:
-                return chunk_ids
             
             start_idx = self.index.ntotal
             self.index.add(embedding_array)
@@ -281,33 +384,53 @@ class VectorStore:
     
     def search_keyword(self, query_text: str, k: int = 5, 
                       filters: Optional[Dict[str, Any]] = None) -> List[SearchResult]:
-        """Perform keyword-based search"""
+        """Perform keyword-based search using multi-term token matching"""
+        import re
+        stop_words = {
+            'the', 'a', 'an', 'and', 'or', 'of', 'to', 'in', 'on', 'for', 'with',
+            'is', 'are', 'was', 'were', 'be', 'been', 'how', 'why', 'what', 'which',
+            'do', 'does', 'did', 'can', 'could', 'my', 'your', 'i', 'it', 'at', 'by',
+            'from', 'as', 'that', 'this', 'these', 'those', 'when', 'where', 'should'
+        }
+        terms = [
+            t for t in re.findall(r"[A-Za-z0-9]+", query_text.lower())
+            if len(t) > 2 and t not in stop_words
+        ]
+        if not terms:
+            return []
+        
         results = []
         query_lower = query_text.lower()
         
         for chunk_id, metadata in self.metadata.items():
             content_lower = metadata['content'].lower()
             
-            # Simple keyword matching
+            if not any(term in content_lower for term in terms):
+                continue
+            
+            # Score = fraction of query terms found in the chunk
+            hits = sum(1 for term in terms if term in content_lower)
+            score = hits / len(terms)
+            
+            # Boost exact-phrase matches
             if query_lower in content_lower:
-                # Calculate a simple relevance score based on term frequency
-                score = content_lower.count(query_lower) / len(content_lower.split())
-                
-                # Apply filters
-                if filters:
-                    if 'document_ids' in filters and metadata.get('document_id') not in filters['document_ids']:
-                        continue
-                
-                result = SearchResult(
-                    chunk_id=chunk_id,
-                    content=metadata['content'],
-                    source_doc=metadata.get('filename', 'Unknown'),
-                    page=metadata.get('page_number', 0),
-                    score=min(score, 1.0),
-                    section_title=metadata.get('section_title'),
-                    document_id=metadata.get('document_id')
-                )
-                results.append(result)
+                score = min(1.0, score + 0.3)
+            
+            # Apply filters
+            if filters:
+                if 'document_ids' in filters and metadata.get('document_id') not in filters['document_ids']:
+                    continue
+            
+            result = SearchResult(
+                chunk_id=chunk_id,
+                content=metadata['content'],
+                source_doc=metadata.get('filename', 'Unknown'),
+                page=metadata.get('page_number', 0),
+                score=score,
+                section_title=metadata.get('section_title'),
+                document_id=metadata.get('document_id')
+            )
+            results.append(result)
         
         # Sort by score and return top k
         results.sort(key=lambda x: x.score, reverse=True)
@@ -400,7 +523,7 @@ class VectorStore:
     def get_statistics(self) -> VectorStoreStats:
         """Get statistics about the vector store"""
         total_chunks = len(self.metadata)
-        index_type = "FAISS" if FAISS_AVAILABLE else "None"
+        index_type = "FAISS" if self.index_type == "faiss" else "Numpy (fallback)"
         
         return VectorStoreStats(
             total_chunks=total_chunks,

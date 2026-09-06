@@ -67,6 +67,19 @@ class GroqProvider:
             print(f"Error generating response with Groq: {e}")
             raise
     
+    def test_connection(self, max_tokens: int = 8) -> dict:
+        """Ping Groq with a minimal completion and return status + latency."""
+        import time
+        start = time.monotonic()
+        self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "user", "content": "ping"}],
+            temperature=0,
+            max_tokens=max_tokens
+        )
+        latency_ms = (time.monotonic() - start) * 1000
+        return {"success": True, "model": self.model, "latency_ms": round(latency_ms, 1)}
+    
     def stream(self, prompt: str, system_prompt: str = None,
               temperature: float = 0.7, max_tokens: int = 2048) -> Iterator[str]:
         """Stream response using Groq API"""
@@ -93,6 +106,187 @@ class GroqProvider:
         except Exception as e:
             print(f"Error streaming response with Groq: {e}")
             raise
+
+
+class OfflineProvider:
+    """Deterministic local fallback used when Groq is selected but no API key is set.
+
+    Produces a citation-style answer assembled from the retrieved documentation
+    chunks so the app remains fully usable offline. Every response carries a
+    clear 'offline mode' banner. When GROQ_API_KEY is configured, GroqProvider is
+    used instead and this class is never invoked.
+    """
+
+    MODE_LABEL = "offline"
+
+    def __init__(self, model: str = "local-fallback"):
+        self.model = model
+        self.api_key = None
+
+    @staticmethod
+    def _key_sentences(text: str, query: str, max_sentences: int = 4):
+        sentences = [s.strip() for s in text.replace("\n", " ").split(". ") if s.strip()]
+        query_terms = set(query.lower().replace("?", "").split())
+        scored = []
+        for s in sentences:
+            words = set(s.lower().split())
+            score = len(words & query_terms)
+            scored.append((score, s))
+        scored.sort(key=lambda x: x[0], reverse=True)
+        picked = [s for s_t, s in scored if s_t > 0][:max_sentences]
+        if not picked:
+            picked = [s for _, s in scored[:2]]
+        return picked
+
+    @staticmethod
+    def assemble_answer(query: str, context: str, sources) -> str:
+        import re
+        lines = [
+            "> **Offline mode** \u2014 GROQ_API_KEY is not configured, so this answer was built "
+            "directly from your uploaded documentation instead of a live LLM. Configure a Groq "
+            "API key to enable full AI-generated responses.",
+        ]
+        # Extract per-chunk blocks from the RAG prompt
+        blocks = []
+        for match in re.split(r"\[DOCUMENT:\s*([^,\]]+)(?:,\s*PAGE:\s*(\d+))?\]", context):
+            blocks.append(match)
+        # blocks interleave: pre, name, page, body, name, page, body...
+        chunks = []
+        i = 1
+        while i < len(blocks):
+            name = (blocks[i] or "").strip()
+            page = (blocks[i + 1] or "").strip()
+            body = (blocks[i + 2] or "").strip() if i + 2 < len(blocks) else ""
+            if body:
+                chunks.append({"name": name, "page": page, "body": body})
+            i += 3
+
+        # Fallback: split on "---" blocks produced by format_context_for_llm
+        if not chunks and "---" in context:
+            for chunk in context.split("---"):
+                body = "\n".join(
+                    ln for ln in chunk.splitlines()
+                    if not ln.startswith(("Source", "Relevance", "Content:"))
+                ).strip()
+                if body:
+                    chunks.append({"name": "", "page": "", "body": body})
+
+        if chunks:
+            seen = set()
+            for chunk in chunks:
+                source_label = chunk["name"] or (next((s[0] for s in sources if True), "") if sources else "")
+                if chunk["page"]:
+                    source_label += f" (Page {chunk['page']})"
+                for sentence in OfflineProvider._key_sentences(chunk["body"], query):
+                    key = sentence[:80]
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    pointer = f"  _[{source_label}]_" if source_label else ""
+                    lines.append(f"- {sentence}{pointer}")
+        else:
+            lines.append("No matching documentation was found for this query. "
+                         "Try uploading relevant manuals or rephrasing the question.")
+
+        if sources:
+            unique = list(dict.fromkeys(s[0] for s in sources))
+            lines.append("")
+            lines.append(f"**Relevant sources:** {', '.join(unique)}")
+
+        lines.append("\nIf the issue persists, involve maintenance personnel and follow safe "
+                     "work practices. Always lock out/tag out equipment before servicing.")
+        return "\n".join(lines)
+
+    def generate(self, prompt: str, system_prompt: str = None,
+                 temperature: float = 0.7, max_tokens: int = 2048) -> str:
+        context, query, sources = self._parse_rag_prompt(prompt)
+        return self.assemble_answer(query, context, sources)
+
+    def stream(self, prompt: str, system_prompt: str = None,
+               temperature: float = 0.7, max_tokens: int = 2048):
+        text = self.generate(prompt, system_prompt, temperature, max_tokens)
+        for i in range(0, len(text), 48):
+            yield text[i:i + 48]
+
+    def _parse_rag_prompt(self, prompt: str):
+        """Split a RAG user prompt into (context, query, sources)."""
+        context = prompt
+        query = prompt
+        sources = []
+        doc_marker = "Technical Documentation:"
+        q_marker = "User Question:"
+        provider_marker = "Provide a"
+        if q_marker in prompt:
+            context = prompt.split(doc_marker, 1)[1].split(q_marker, 1)[0] if doc_marker in prompt else prompt.split(q_marker, 1)[0]
+            rest = prompt.split(q_marker, 1)[1]
+            query = rest.split(provider_marker)[0].strip() if provider_marker in rest else rest.strip()
+        # Extract [DOCUMENT: ...] source lines
+        import re
+        for m in re.finditer(r"\[DOCUMENT:\s*([^,\]]+)(?:,\s*PAGE:\s*(\d+))?\]", context):
+            name = m.group(1).strip()
+            page = m.group(2)
+            sources.append((name, int(page) if page else 1))
+        return context, query, sources
+
+    def test_connection(self) -> dict:
+        return {
+            "success": False,
+            "model": self.model,
+            "message": "GROQ_API_KEY is not configured \u2014 running in offline mode"
+        }
+
+    def structured_chain(self, problem: str, context: str) -> Dict[str, Any]:
+        """Build a deterministic troubleshooting chain from retrieved docs."""
+        root_cause_terms = [
+            ("Cavitation", ["cavitation"]),
+            ("Worn or damaged bearing", ["bearing", "vibration"]),
+            ("Failing mechanical seal", ["seal", "leak", "leakage"]),
+            ("Misalignment of pump and motor", ["alignment", "shaft"]),
+            ("Clogged suction line or strainer", ["suction", "strainer", "clog"]),
+            ("Worn impeller or excessive clearance", ["impeller", "wear ring", "clearance"]),
+            ("Electrical / motor fault", ["motor overload", "current", "voltage"]),
+        ]
+        root_causes = []
+        lower = (problem + " " + context).lower()
+        for label, terms in root_cause_terms:
+            if any(t in lower for t in terms):
+                root_causes.append(label)
+
+        lines = [
+            "Inspect the equipment in a safe sequence. Confirm the reported issue and compare "
+            "current readings (temperature, pressure, current, vibration) to normal values.",
+        ]
+        base_steps = [
+            "Lock out / tag out the equipment and disconnect the drive before inspection.",
+            "Check suction and discharge conditions; confirm the strainer is clear and there is no air ingestion.",
+            "Monitor vibration and temperature at the pump housing and motor bearing.",
+            "Inspect seals, gaskets, and wear parts for leakage or damage; replace as needed.",
+            "Verify shaft alignment and bearing condition; replace worn bearings.",
+            "Restart and confirm readings return to normal operating ranges.",
+        ]
+        if root_causes:
+            lines.insert(1, "Likely root causes identified from documentation: " + "; ".join(root_causes) + ".")
+        steps = []
+        for i, action in enumerate(base_steps, start=1):
+            steps.append({
+                "step": i,
+                "action": action,
+                "expected": "Readings within normal range; no leakage"
+            })
+        return {
+            "problem": problem,
+            "root_causes": root_causes or ["Marginal documentation coverage \u2014 verify with maintenance team"],
+            "steps": steps,
+            "citations": [
+                {"source": n, "page": p, "excerpt": s}
+                for n, p in self._get_source_pairs(context)[:3]
+            ],
+        }
+
+    def _get_source_pairs(self, context: str):
+        import re
+        return [(m.group(1).strip(), int(m.group(2)) if m.group(2) else 1)
+                for m in re.finditer(r"\[DOCUMENT:\s*([^,\]]+)(?:,\s*PAGE:\s*(\d+))?\]", context)]
 
 
 class OpenAIProvider:
@@ -166,19 +360,33 @@ class OpenAIProvider:
 class AIService:
     """AI service for generating troubleshooting responses"""
     
-    def __init__(self, provider: str = None):
-        self.provider = provider or settings.LLM_PROVIDER
+    def __init__(self, provider: str = None, model: str = None):
+        # Honor persisted runtime overrides when explicit values are not given
+        from app.services.llm_config import load_llm_config
+        overrides = load_llm_config()
+        self.provider = provider or overrides.get('provider') or settings.LLM_PROVIDER
+        self.model = model or overrides.get('model') or settings.GROQ_MODEL
         self.provider_instance = None
         self._initialize_provider()
     
     def _initialize_provider(self):
         """Initialize the selected LLM provider"""
         if self.provider == 'groq':
-            self.provider_instance = GroqProvider()
+            if not settings.GROQ_API_KEY:
+                print("WARNING: GROQ_API_KEY not set - using OfflineProvider fallback.")
+                self.provider_instance = OfflineProvider(model=self.model)
+            else:
+                self.provider_instance = GroqProvider(model=self.model)
         elif self.provider == 'openai':
-            self.provider_instance = OpenAIProvider()
+            self.provider_instance = OpenAIProvider(model=self.model)
         else:
             raise ValueError(f"Unsupported provider: {self.provider}. Use 'groq' or 'openai'")
+    
+    def test_connection(self) -> dict:
+        """Verify the configured LLM provider is reachable"""
+        if not hasattr(self.provider_instance, 'test_connection'):
+            return {"success": False, "message": "Provider does not support connection testing"}
+        return self.provider_instance.test_connection()
     
     def generate_answer(self, query: str, context: str, 
                        model_params: Dict[str, Any] = None) -> Answer:
@@ -229,6 +437,8 @@ Provide a detailed, citation-backed answer referencing the documentation above."
     
     def generate_troubleshooting_chain(self, problem: str, context: str) -> Dict[str, Any]:
         """Generate a structured troubleshooting chain"""
+        if isinstance(self.provider_instance, OfflineProvider):
+            return self.provider_instance.structured_chain(problem, context)
         system_prompt = """You are an expert industrial equipment troubleshooting assistant.
 Generate a structured troubleshooting response with:
 1. Problem identification

@@ -11,9 +11,10 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.config import settings
-from app.routes import documents, chat, search, knowledge_graph
+from app.routes import documents, chat, search, knowledge_graph, ai, field
 
 # Configure logging
+os.makedirs(os.path.dirname(settings.LOG_FILE) or '.', exist_ok=True)
 logging.basicConfig(
     level=getattr(logging, settings.LOG_LEVEL),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -70,9 +71,12 @@ app = FastAPI(
 )
 
 # Configure CORS
+cors_origins = settings.ALLOWED_ORIGINS
+if isinstance(cors_origins, str):
+    cors_origins = [origin.strip() for origin in cors_origins.split(",")]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS.split(","),
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -187,6 +191,8 @@ app.include_router(documents.router, prefix="/api/documents", tags=["documents"]
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 app.include_router(search.router, prefix="/api/search", tags=["search"])
 app.include_router(knowledge_graph.router, prefix="/api/knowledge-graph", tags=["knowledge-graph"])
+app.include_router(ai.router, prefix="/api/ai", tags=["ai"])
+app.include_router(field.router, prefix="/api/field", tags=["field"])
 
 
 # Root endpoint

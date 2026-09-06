@@ -1,6 +1,9 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Body
 from typing import Optional, List
+import os
+import json
 
+from app.config import settings
 from app.schemas.query import (
     QuerySchema, SearchResponse, SearchSuggestion, SearchSuggestionsResponse,
     AdvancedSearchRequest, SearchModeEnum
@@ -10,6 +13,14 @@ from app.services.rag_service import RAGService
 from app.services.vector_store import VectorStore
 
 router = APIRouter()
+
+
+def _derive_document_id(chunk_id: str) -> Optional[str]:
+    """Extract the document UUID from a chunk id like '<uuid>_<n>'"""
+    if chunk_id and '_' in chunk_id:
+        doc_part, _, _ = chunk_id.rpartition('_')
+        return doc_part if doc_part else chunk_id
+    return chunk_id
 
 
 @router.get("/", response_model=SearchResponse)
@@ -53,7 +64,7 @@ async def search(
                 source_doc=context.source_doc,
                 page=context.page,
                 score=context.score,
-                document_id=context.chunk_id.split('_')[0] if '_' in context.chunk_id else None
+                document_id=_derive_document_id(context.chunk_id)
             ))
         
         return SearchResponse(
@@ -66,6 +77,60 @@ async def search(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error performing search: {str(e)}")
+
+
+DEFAULT_SEARCH_CONFIG = {
+    "semantic_weight": 0.7,
+    "keyword_weight": 0.3,
+    "min_confidence": 0.3,
+    "default_k": 5,
+    "max_results": 20
+}
+
+
+def _load_search_config() -> dict:
+    """Load persisted search configuration overrides"""
+    path = settings.resolve_data_dir(settings.SEARCH_CONFIG_PATH)
+    config = dict(DEFAULT_SEARCH_CONFIG)
+    if os.path.exists(path):
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                config.update(json.load(f))
+        except Exception as e:
+            print(f"Error loading search config: {e}")
+    return config
+
+
+def _save_search_config(config: dict) -> dict:
+    """Persist search configuration overrides"""
+    merged = dict(DEFAULT_SEARCH_CONFIG)
+    merged.update({k: v for k, v in config.items() if k in DEFAULT_SEARCH_CONFIG})
+    path = settings.resolve_data_dir(settings.SEARCH_CONFIG_PATH)
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(merged, f, indent=2)
+    return merged
+
+
+@router.get("/config")
+async def get_search_config():
+    """Return current search configuration (defaults overlaid with overrides)"""
+    return {
+        "config": _load_search_config(),
+        "defaults": DEFAULT_SEARCH_CONFIG,
+        "persisted": True
+    }
+
+
+@router.put("/config")
+async def update_search_config(payload: dict = Body(...)):
+    """Update and persist search configuration"""
+    if not isinstance(payload, dict) or not all(k in DEFAULT_SEARCH_CONFIG for k in payload):
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unknown keys. Allowed: {list(DEFAULT_SEARCH_CONFIG.keys())}"
+        )
+    saved = _save_search_config(payload)
+    return {"config": saved, "message": "Search configuration updated"}
 
 
 @router.get("/suggestions", response_model=SearchSuggestionsResponse)
@@ -157,7 +222,7 @@ async def advanced_search(request: AdvancedSearchRequest):
                 source_doc=context.source_doc,
                 page=context.page,
                 score=context.score,
-                document_id=context.chunk_id.split('_')[0] if '_' in context.chunk_id else None
+                document_id=_derive_document_id(context.chunk_id)
             ))
         
         # Get expanded terms

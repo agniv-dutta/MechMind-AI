@@ -3,9 +3,11 @@ from fastapi.responses import JSONResponse
 from typing import Optional, List
 from datetime import datetime
 import os
+import json
 import shutil
 import uuid
 
+from app.config import settings
 from app.schemas.document import (
     DocumentSchema, DocumentUploadSchema, DocumentUploadResponse,
     DocumentListResponse, DocumentDetailResponse, PageContentResponse,
@@ -19,6 +21,43 @@ from sqlalchemy.orm import Session
 
 router = APIRouter()
 document_processor = DocumentProcessor()
+
+
+def _save_page_content(document_id: str, pages, filename: str):
+    """Persist per-page extracted text to disk for later retrieval"""
+    pages_dir = settings.resolve_data_dir(settings.PAGE_CONTENT_PATH)
+    manifest = []
+    for idx, page in enumerate(pages, start=1):
+        page_path = os.path.join(pages_dir, f"{document_id}_page_{idx}.txt")
+        content = page.content if hasattr(page, 'content') else str(page)
+        with open(page_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        manifest.append({'page': idx, 'path': page_path})
+    # Store a manifest for the document
+    manifest_path = os.path.join(pages_dir, f"{document_id}_manifest.json")
+    with open(manifest_path, 'w', encoding='utf-8') as f:
+        json.dump({'document_id': document_id, 'filename': filename, 'pages': manifest}, f)
+
+
+def _load_page_content(document_id: str, page_num: int):
+    """Load persisted page content for a document"""
+    pages_dir = settings.resolve_data_dir(settings.PAGE_CONTENT_PATH)
+    path = os.path.join(pages_dir, f"{document_id}_page_{page_num}.txt")
+    if os.path.exists(path):
+        with open(path, 'r', encoding='utf-8') as f:
+            return f.read()
+    return None
+
+
+def _delete_page_content(document_id: str):
+    """Remove persisted page content for a document"""
+    pages_dir = settings.resolve_data_dir(settings.PAGE_CONTENT_PATH)
+    for fn in os.listdir(pages_dir):
+        if fn.startswith(document_id):
+            try:
+                os.remove(os.path.join(pages_dir, fn))
+            except OSError:
+                pass
 
 
 @router.post("/upload", response_model=DocumentUploadResponse)
@@ -40,8 +79,7 @@ async def upload_document(
             raise HTTPException(status_code=400, detail=f"Unsupported file type: {file_extension}")
         
         # Create upload directory if it doesn't exist
-        upload_dir = "uploads"
-        os.makedirs(upload_dir, exist_ok=True)
+        upload_dir = settings.resolve_upload_dir()
         
         # Save file
         document_id = str(uuid.uuid4())
@@ -61,6 +99,26 @@ async def upload_document(
                 'tags': tags.split(',') if tags else []
             }
         )
+        
+        # Reject duplicate files (same content hash)
+        existing_dup = db.query(Document).filter(Document.file_hash == processed_doc.content_hash).first()
+        if existing_dup is not None:
+            try:
+                os.remove(file_path)
+            except OSError:
+                pass
+            return DocumentUploadResponse(
+                document_id=existing_dup.id,
+                filename=existing_dup.filename,
+                status="complete",
+                pages=existing_dup.total_pages,
+                entities_found=0,
+                processing_time=0,
+                message="File already exists - duplicate upload ignored"
+            )
+        
+        # Persist per-page extracted text
+        _save_page_content(document_id, processed_doc.pages, file.filename)
         
         # Create database entry
         db_document = Document(
@@ -118,7 +176,7 @@ async def upload_document(
             filename=file.filename,
             status="complete",
             pages=processed_doc.total_pages,
-            entities_found=processed_doc.metadata.get('categories', []),
+            entities_found=len(processed_doc.metadata.get('categories', [])),
             processing_time=processing_time,
             message="Document processed successfully"
         )
@@ -154,8 +212,28 @@ async def list_documents(
         total_count = query.count()
         documents = query.offset(skip).limit(limit).all()
         
+        # Map ORM rows to schema (field names differ from DB columns)
+        from app.schemas.document import DocumentSchema
+        document_schemas = []
+        for doc in documents:
+            document_schemas.append(DocumentSchema(
+                id=doc.id,
+                filename=doc.filename,
+                file_type=doc.file_type,
+                file_size=doc.file_size,
+                uploaded_at=doc.uploaded_at,
+                status=doc.processing_status,
+                pages_count=doc.total_pages,
+                equipment_type=doc.equipment_type,
+                category=doc.category,
+                version=doc.version,
+                tags=doc.tags.split(',') if doc.tags else [],
+                chunks_count=doc.chunks_count or 0,
+                entities_found=0
+            ))
+        
         return DocumentListResponse(
-            documents=documents,
+            documents=document_schemas,
             total_count=total_count,
             skip=skip,
             limit=limit
@@ -174,20 +252,52 @@ async def get_document(document_id: str, db: Session = Depends(get_db)):
         if not document:
             raise HTTPException(status_code=404, detail="Document not found")
         
+        # Build content preview from first persisted page if available
+        content_preview = f"Document with {document.total_pages} pages"
+        first_page = _load_page_content(document_id, 1)
+        if first_page:
+            content_preview = first_page[:1500]
+        
+        # Gather entities + relationships from the knowledge graph
+        kg_service = KnowledgeGraphService()
+        await kg_service.initialize()
+        entities = kg_service.get_entities_for_document(document_id)
+        entity_list = [
+            {
+                'name': e.name,
+                'type': e.entity_type,
+                'page': e.page,
+                'confidence': e.confidence
+            }
+            for e in entities
+        ]
+        rels = [r for r in kg_service.relationships
+                if r.document_id == document_id]
+        rel_list = [
+            {
+                'source': r.entity1,
+                'target': r.entity2,
+                'type': r.relationship_type
+            }
+            for r in rels
+        ]
+        
         return DocumentDetailResponse(
             id=document.id,
             filename=document.filename,
             file_type=document.file_type,
-            content_preview=f"Document with {document.total_pages} pages",
+            content_preview=content_preview,
             metadata={
                 'file_size': document.file_size,
                 'equipment_type': document.equipment_type,
                 'category': document.category,
                 'version': document.version,
-                'tags': document.tags.split(',') if document.tags else []
+                'tags': document.tags.split(',') if document.tags else [],
+                'chunks_count': document.chunks_count,
+                'extracted_text_length': document.extracted_text_length
             },
-            entities=[],
-            relationships=[],
+            entities=entity_list,
+            relationships=rel_list,
             uploaded_at=document.uploaded_at,
             processed_at=document.processed_at
         )
@@ -219,8 +329,16 @@ async def delete_document(document_id: str, db: Session = Depends(get_db)):
         await vector_store.initialize()
         vector_store.delete_document(document_id)
         
+        # Delete from knowledge graph
+        kg_service = KnowledgeGraphService()
+        await kg_service.initialize()
+        kg_service.delete_document(document_id)
+        
+        # Delete page content cache
+        _delete_page_content(document_id)
+        
         # Delete file from disk
-        upload_dir = "uploads"
+        upload_dir = settings.resolve_upload_dir()
         for filename in os.listdir(upload_dir):
             if filename.startswith(document_id):
                 file_path = os.path.join(upload_dir, filename)
@@ -251,11 +369,14 @@ async def get_page_content(document_id: str, page_num: int, db: Session = Depend
         if page_num < 1 or page_num > document.total_pages:
             raise HTTPException(status_code=400, detail="Invalid page number")
         
-        # This is a simplified implementation
-        # In production, you would retrieve actual page content from storage
+        # Retrieve actual page content from persisted cache
+        text_content = _load_page_content(document_id, page_num)
+        if text_content is None:
+            text_content = f"Content for page {page_num} of {document.filename} (not extracted)"
+        
         return PageContentResponse(
             page_number=page_num,
-            text_content=f"Content for page {page_num} of {document.filename}",
+            text_content=text_content,
             image_url=None,
             tables=[],
             diagrams=[]

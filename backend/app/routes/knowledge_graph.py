@@ -27,14 +27,15 @@ async def list_entities(
         from app.schemas.knowledge_graph import EntitySchema
         entity_schemas = []
         for entity in entities[offset:offset+limit]:
+            doc_refs = kg_service.entity_document_map.get(entity.name, [])
             entity_schemas.append(EntitySchema(
                 id=entity.id,
                 name=entity.name,
                 type=entity.entity_type,
                 description=entity.properties.get('description', ''),
                 properties=entity.properties,
-                frequency=kg_service.entity_document_map.get(entity.name, [{'document_id': entity.document_id}]).__len__(),
-                document_count=len(set([doc['document_id'] for doc in kg_service.entity_document_map.get(entity.name, [])])),
+                frequency=len(doc_refs),
+                document_count=len(set([doc['document_id'] for doc in doc_refs])),
                 first_seen_at=entity.properties.get('first_seen_at', None),
                 last_seen_at=entity.properties.get('last_seen_at', None)
             ))

@@ -1,16 +1,19 @@
 import React from 'react';
 import { 
   BookOpen, 
-  BarChart2, 
   CheckCircle2, 
-  Loader2, 
-  Gauge, 
-  History, 
-  FileText 
+  FileText,
+  Loader2
 } from 'lucide-react';
 import VibrationSpectrum from './VibrationSpectrum';
 
-export default function InspectorPanel() {
+export default function InspectorPanel({ sources = [], isStreaming = false, activeCitation, onCitationClick }) {
+  const avgConfidence = sources.length
+    ? Math.round((sources.reduce((sum, s) => sum + (s.confidence || 0), 0) / sources.length) * 100)
+    : null;
+
+  const citationActive = (idx) => activeCitation && activeCitation.id === idx;
+
   return (
     <aside className="w-[340px] bg-slate-50/90 dark:bg-slate-900/60 border-l border-slate-200 dark:border-slate-800 flex flex-col h-full shrink-0 overflow-y-auto transition-colors duration-200 select-none">
       {/* Header & Tabs */}
@@ -18,8 +21,12 @@ export default function InspectorPanel() {
         <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
           Context Retrieval
         </h2>
-        <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700">
-          ACTIVE
+        <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
+          isStreaming
+            ? 'bg-teal-500/15 text-teal-600 dark:text-teal-300 border-teal-500/30 animate-pulse'
+            : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-700'
+        }`}>
+          {isStreaming ? 'SCANNING' : sources.length ? 'ACTIVE' : 'IDLE'}
         </span>
       </div>
 
@@ -31,20 +38,21 @@ export default function InspectorPanel() {
               Confidence Score
             </span>
             <span className="px-2 py-0.5 rounded-full text-xs font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-mono">
-              73%
+              {avgConfidence !== null ? `${avgConfidence}%` : '--'}
             </span>
           </div>
 
-          {/* Progress Bar (73%) */}
           <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-200/50 dark:border-slate-700/50">
             <div 
               className="h-full bg-[#10B981] rounded-full transition-all duration-500 shadow-sm"
-              style={{ width: '73%' }}
+              style={{ width: `${avgConfidence ?? 0}%` }}
             />
           </div>
 
           <p className="text-[11px] text-slate-500 dark:text-slate-400 italic">
-            Calibrating parameters...
+            {sources.length
+              ? `${sources.length} source${sources.length > 1 ? 's' : ''} retrieved from ${new Set(sources.map(s => s.source_doc)).size} document(s)`
+              : isStreaming ? 'Scanning knowledge base...' : 'Ask a question to retrieve context sources.'}
           </p>
         </div>
 
@@ -52,58 +60,62 @@ export default function InspectorPanel() {
         <div className="space-y-3">
           <div className="flex items-center justify-between text-[11px] font-bold tracking-wider text-slate-600 dark:text-slate-400 uppercase">
             <span>Knowledge Sources</span>
-            <span className="text-teal-600 dark:text-teal-400 font-mono text-[10px]">Indexed</span>
+            <span className={`text-teal-600 dark:text-teal-400 font-mono text-[10px] ${isStreaming ? 'animate-pulse' : ''}`}>
+              {isStreaming ? 'Scanning' : sources.length ? 'Retrieved' : 'None'}
+            </span>
           </div>
 
-          {/* Source Card 1 */}
-          <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-2xs">
-            <div className="flex items-center space-x-3 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                <BookOpen className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
-                  B-Series Turbine Operations & Maintenance Manual
-                </h4>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-                  TechDocs-V3 • Sec 4.2
-                </p>
-              </div>
+          {sources.length === 0 && !isStreaming && (
+            <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 text-center">
+              <FileText className="w-5 h-5 text-slate-300 dark:text-slate-600 mx-auto mb-1.5" />
+              <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                No sources retrieved yet.
+              </p>
             </div>
-            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 ml-2" />
-          </div>
+          )}
 
-          {/* Source Card 2 */}
-          <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-2xs">
-            <div className="flex items-center space-x-3 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                <BarChart2 className="w-4 h-4" />
+          {isStreaming && sources.length === 0 && (
+            <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-2 shadow-2xs">
+              <div className="flex items-center space-x-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <Loader2 className="w-4 h-4 text-teal-500 animate-spin" />
+                <span>Scanning SCADA logs...</span>
               </div>
-              <div className="min-w-0">
-                <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
-                  Historical Incidents: B-42 Rotor Bow
-                </h4>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-                  Oct 2023 • Maintenance Log
-                </p>
+              <div className="space-y-1.5 pt-1">
+                <div className="h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full w-full animate-pulse"></div>
+                <div className="h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full w-3/4 animate-pulse"></div>
               </div>
             </div>
-            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 ml-2" />
-          </div>
+          )}
 
-          {/* Loading Card (Scanning State) */}
-          <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-2 shadow-2xs">
-            <div className="flex items-center space-x-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
-              <Loader2 className="w-4 h-4 text-teal-500 animate-spin" />
-              <span>Scanning SCADA logs...</span>
+          {sources.map((src, idx) => (
+            <div
+              key={src.id ?? idx}
+              onClick={() => onCitationClick && onCitationClick(src)}
+              className={`p-3.5 rounded-xl bg-white dark:bg-slate-900 border flex items-center justify-between shadow-2xs cursor-pointer transition-all ${
+                citationActive(idx)
+                  ? 'border-teal-500 ring-1 ring-teal-500/40'
+                  : 'border-slate-200 dark:border-slate-800 hover:border-teal-500/40'
+              }`}
+            >
+              <div className="flex items-center space-x-3 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <BookOpen className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                    {src.source_doc}
+                  </h4>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                    Page {src.page} • Confidence {Math.round((src.confidence || 0) * 100)}%
+                  </p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 line-clamp-2">
+                    {String(src.excerpt || '').slice(0, 140)}
+                  </p>
+                </div>
+              </div>
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 ml-2" />
             </div>
-            
-            {/* Text skeleton loader */}
-            <div className="space-y-1.5 pt-1">
-              <div className="h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full w-full animate-pulse"></div>
-              <div className="h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full w-3/4 animate-pulse"></div>
-            </div>
-          </div>
+          ))}
         </div>
 
         {/* Simulated Vibration Spectrum Box */}

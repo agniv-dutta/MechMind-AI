@@ -14,6 +14,11 @@ class Settings(BaseSettings):
         default="http://localhost:3000,http://localhost:5173,http://0.0.0.0:3000",
         description="CORS allowed origins"
     )
+    # Public origin (no scheme) used to detect request origin for CORS
+    ALLOWED_ORIGINS_RAW: str = Field(
+        default="http://localhost:3000,http://localhost:5173",
+        description="Raw allowed origins (no trailing slash)"
+    )
     
     # Database Configuration
     DATABASE_URL: str = Field(
@@ -30,7 +35,11 @@ class Settings(BaseSettings):
     # LLM Configuration - Using Groq API
     LLM_PROVIDER: str = Field(default="groq", description="LLM provider (groq/openai/ollama)")
     GROQ_API_KEY: str = Field(default="", description="Groq API key")
-    GROQ_MODEL: str = Field(default="llama3-70b-8192", description="Groq model name")
+    GROQ_MODEL: str = Field(default="llama-3.3-70b-versatile", description="Groq model name")
+    GROQ_MODELS: str = Field(
+        default="llama-3.3-70b-versatile,llama-3.1-8b-instant,mixtral-8x7b-32768,deepseek-r1-distill-llama-70b",
+        description="Comma-separated list of available Groq models"
+    )
     
     # Alternative LLM providers (kept for compatibility)
     OPENAI_API_KEY: str = Field(default="", description="OpenAI API key")
@@ -62,6 +71,28 @@ class Settings(BaseSettings):
     CHUNK_SIZE: int = Field(default=1024, description="Maximum chunk size in tokens")
     CHUNK_OVERLAP: int = Field(default=256, description="Chunk overlap in tokens")
     MIN_CHUNK_SIZE: int = Field(default=256, description="Minimum chunk size in tokens")
+
+    # Persistence Configuration
+    SEARCH_CONFIG_PATH: str = Field(default="./data/search_config.json", description="Path to search config overrides")
+    KNOWLEDGE_GRAPH_PATH: str = Field(default="./data/knowledge_graph.pkl", description="Path to persisted knowledge graph")
+    PAGE_CONTENT_PATH: str = Field(default="./data/pages", description="Directory storing extracted per-page content")
+
+    @property
+    def groq_models_list(self) -> List[str]:
+        """Available Groq models as a list"""
+        return [m.strip() for m in self.GROQ_MODELS.split(",") if m.strip()]
+
+    def resolve_upload_dir(self) -> str:
+        """Resolve UPLOAD_DIRECTORY to an absolute path relative to the backend root"""
+        p = os.path.abspath(self.UPLOAD_DIRECTORY)
+        os.makedirs(p, exist_ok=True)
+        return p
+
+    def resolve_data_dir(self, subpath: str) -> str:
+        """Resolve a data sub-path relative to the backend root, creating parents"""
+        p = os.path.abspath(subpath)
+        os.makedirs(p if subpath.endswith(os.sep) or os.path.splitext(p)[1] == "" else os.path.dirname(p), exist_ok=True)
+        return p
     
     @validator('ALLOWED_ORIGINS')
     def parse_allowed_origins(cls, v):
@@ -80,9 +111,14 @@ class Settings(BaseSettings):
     
     @validator('GROQ_API_KEY')
     def validate_groq_key(cls, v, values):
-        """Validate Groq API key if Groq is the provider"""
+        """Warn (do not hard-fail) if Groq is the active provider without a key.
+
+        The app must still boot so the UI can surface a helpful "missing API key"
+        message. Requests that actually hit the LLM will raise a clear error.
+        """
         if values.get('LLM_PROVIDER') == 'groq' and not v:
-            raise ValueError("GROQ_API_KEY is required when LLM_PROVIDER is 'groq'")
+            print("WARNING: LLM_PROVIDER is 'groq' but GROQ_API_KEY is not set. "
+                  "Chat/query endpoints will return a clear error until a key is configured.")
         return v
     
     class Config:

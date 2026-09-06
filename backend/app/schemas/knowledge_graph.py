@@ -12,7 +12,7 @@ class EntitySchema(BaseModel):
     properties: Dict[str, Any] = {}
     frequency: int = 1
     document_count: int = 0
-    first_seen_at: datetime
+    first_seen_at: Optional[datetime] = None
     last_seen_at: Optional[datetime] = None
 
 
@@ -42,7 +42,7 @@ class RelationshipSchema(BaseModel):
     confidence: float = Field(ge=0, le=1)
     mention_count: int = 1
     source_documents: List[str] = []
-    created_at: datetime
+    created_at: Optional[datetime] = None
 
 
 class RelationshipResponse(BaseModel):

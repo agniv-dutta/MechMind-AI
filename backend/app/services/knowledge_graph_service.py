@@ -1,5 +1,6 @@
 import os
 import json
+import pickle
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import uuid
@@ -68,8 +69,9 @@ class GraphStats:
 class KnowledgeGraphService:
     """Service for building and querying knowledge graphs"""
     
-    def __init__(self):
+    def __init__(self, persist_path: str = None):
         self.use_neo4j = settings.USE_NEO4J and NEO4J_AVAILABLE
+        self.persist_path = persist_path or settings.KNOWLEDGE_GRAPH_PATH
         self.graph = None
         self.neo4j_driver = None
         self.entities: Dict[str, Entity] = {}  # name -> Entity
@@ -83,6 +85,81 @@ class KnowledgeGraphService:
             self._init_neo4j()
         else:
             self._init_networkx()
+            self._load_from_disk()
+    
+    def _persist_to_disk(self):
+        """Save entities/relationships to disk so data survives restarts"""
+        if self.use_neo4j:
+            return
+        try:
+            data = {
+                'entities': [
+                    {'id': e.id, 'name': e.name, 'entity_type': e.entity_type,
+                     'document_id': e.document_id, 'page': e.page,
+                     'confidence': e.confidence, 'properties': e.properties}
+                    for e in self.entities.values()
+                ],
+                'relationships': [
+                    {'id': r.id, 'entity1': r.entity1, 'entity2': r.entity2,
+                     'relationship_type': r.relationship_type,
+                     'document_id': r.document_id, 'confidence': r.confidence}
+                    for r in self.relationships
+                ]
+            }
+            os.makedirs(os.path.dirname(self.persist_path), exist_ok=True)
+            with open(self.persist_path, 'wb') as f:
+                pickle.dump(data, f)
+        except Exception as e:
+            print(f"Error persisting knowledge graph: {e}")
+    
+    def _load_from_disk(self):
+        """Load entities/relationships from disk and rebuild graph"""
+        if not os.path.exists(self.persist_path):
+            return
+        try:
+            with open(self.persist_path, 'rb') as f:
+                data = pickle.load(f)
+            for ed in data.get('entities', []):
+                entity = Entity(
+                    name=ed['name'],
+                    entity_type=ed['entity_type'],
+                    document_id=ed.get('document_id', ''),
+                    page=ed.get('page', 1),
+                    confidence=ed.get('confidence', 1.0),
+                    properties=ed.get('properties', {})
+                )
+                entity.id = ed.get('id', entity.id)
+                self.entities[entity.name] = entity
+                self.entity_document_map.setdefault(entity.name, []).append({
+                    'document_id': entity.document_id,
+                    'page': entity.page,
+                    'confidence': entity.confidence
+                })
+                if self.graph is not None:
+                    self.graph.add_node(entity.name, type=entity.entity_type,
+                                        document_id=entity.document_id,
+                                        page=entity.page, confidence=entity.confidence,
+                                        properties=json.dumps(entity.properties))
+            for rd in data.get('relationships', []):
+                rel = Relationship(
+                    entity1=rd['entity1'],
+                    entity2=rd['entity2'],
+                    relationship_type=rd['relationship_type'],
+                    document_id=rd.get('document_id', ''),
+                    confidence=rd.get('confidence', 1.0)
+                )
+                rel.id = rd.get('id', rel.id)
+                self.relationships.append(rel)
+                if self.graph is not None:
+                    self.graph.add_edge(rel.entity1, rel.entity2,
+                                        relationship_type=rel.relationship_type,
+                                        document_id=rel.document_id, confidence=rel.confidence)
+            print(f"Loaded knowledge graph: {len(self.entities)} entities, {len(self.relationships)} relationships")
+        except Exception as e:
+            print(f"Error loading knowledge graph from disk: {e}")
+            self.entities = {}
+            self.relationships = []
+            self.entity_document_map = {}
     
     def _init_networkx(self):
         """Initialize in-memory graph using networkx"""
@@ -233,6 +310,7 @@ class KnowledgeGraphService:
                 properties=json.dumps(entity.properties)
             )
         
+        self._persist_to_disk()
         return entity.id
     
     def _add_entity_neo4j(self, entity: Entity):
@@ -271,6 +349,7 @@ class KnowledgeGraphService:
                 confidence=relationship.confidence
             )
         
+        self._persist_to_disk()
         return relationship.id
     
     def _add_relationship_neo4j(self, relationship: Relationship):
@@ -294,18 +373,24 @@ class KnowledgeGraphService:
             print(f"Error adding relationship to Neo4j: {e}")
     
     def query_entities(self, entity_name: str, entity_type: str = None) -> List[Entity]:
-        """Query entities by name and/or type"""
+        """Query entities by name and/or type
+        
+        With no filters, returns all entities. Filters are applied when provided.
+        """
         results = []
         
         for entity in self.entities.values():
-            if entity_name and entity_name.lower() in entity.name.lower():
-                if entity_type is None or entity.entity_type == entity_type:
-                    results.append(entity)
-            elif entity_name is None and entity_type:
-                if entity.entity_type == entity_type:
-                    results.append(entity)
+            if entity_name and entity_name.lower() not in entity.name.lower():
+                continue
+            if entity_type and entity.entity_type != entity_type:
+                continue
+            results.append(entity)
         
         return results
+    
+    def get_entities_for_document(self, doc_id: str) -> List[Entity]:
+        """Return all entities that were extracted from a given document"""
+        return [e for e in self.entities.values() if e.document_id == doc_id]
     
     def find_relationships(self, entity1: str, entity2: str = None, 
                           relationship_type: str = None) -> List[Relationship]:
@@ -331,12 +416,22 @@ class KnowledgeGraphService:
             
             if start_entity in self.graph and end_entity in self.graph:
                 try:
-                    path_nodes = nx.shortest_path(
-                        self.graph, 
-                        source=start_entity, 
-                        target=end_entity,
-                        cutoff=max_depth
-                    )
+                    try:
+                        path_nodes = nx.shortest_path(
+                            self.graph,
+                            source=start_entity,
+                            target=end_entity,
+                            cutoff=max_depth
+                        )
+                    except TypeError:
+                        # Some networkx versions dropped `cutoff` on shortest_path;
+                        # use single-source BFS with an explicit cutoff instead.
+                        by_source = nx.single_source_shortest_path(
+                            self.graph, start_entity, cutoff=max_depth
+                        )
+                        if end_entity not in by_source:
+                            raise nx.NetworkXNoPath
+                        path_nodes = by_source[end_entity]
                     
                     if len(path_nodes) > 1:
                         # Convert to Path object
@@ -480,5 +575,27 @@ class KnowledgeGraphService:
     
     async def close(self):
         """Cleanup and close connections"""
+        self._persist_to_disk()
         if self.neo4j_driver:
             self.neo4j_driver.close()
+    
+    def delete_document(self, doc_id: str) -> int:
+        """Remove all entities/relationships belonging to a document"""
+        removed_entities = []
+        for name, entity in list(self.entities.items()):
+            if entity.document_id == doc_id:
+                removed_entities.append(name)
+                del self.entities[name]
+                self.entity_document_map.pop(name, None)
+                if self.graph is not None and self.graph.has_node(name):
+                    self.graph.remove_node(name)
+        
+        before = len(self.relationships)
+        self.relationships = [
+            r for r in self.relationships if r.document_id != doc_id
+        ]
+        removed_rels = before - len(self.relationships)
+        
+        if removed_entities or removed_rels:
+            self._persist_to_disk()
+        return removed_rels
