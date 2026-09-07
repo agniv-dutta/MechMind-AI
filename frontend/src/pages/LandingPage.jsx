@@ -5,7 +5,7 @@ import { FeaturesSection, Testimonial, PricingSection, CTAFooter } from '../comp
 
 export function LandingPage({ onEnter }) {
   return (
-    <div className="bg-slate-950 min-h-screen overflow-y-auto">
+    <div className="bg-slate-50 text-slate-900 min-h-screen overflow-y-auto">
       <Navigation onLogin={onEnter} onTrial={onEnter} />
       <HeroSection onTrial={onEnter} onDemo={onEnter} />
       <FeaturesSection />

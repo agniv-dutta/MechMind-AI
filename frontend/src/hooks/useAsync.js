@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { useAsync } from './useAsync.js';
 
 export function useAsync(asyncFn) {
   const [state, setState] = useState({ data: null, error: null, loading: false });

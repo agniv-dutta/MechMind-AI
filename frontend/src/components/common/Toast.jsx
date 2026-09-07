@@ -17,10 +17,10 @@ export function Toasts() {
       {toasts.map((t) => (
         <div
           key={t.id}
-          className="flex items-start gap-2 bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/20 rounded-xl shadow-lg p-3 text-sm"
+          className="flex items-start gap-2 bg-white border border-slate-200 rounded-xl shadow-lg p-3 text-sm"
         >
           {ICONS[t.type] || ICONS.info}
-          <span className="flex-1 text-slate-800 dark:text-slate-200">{t.message}</span>
+          <span className="flex-1 text-slate-800">{t.message}</span>
           <button onClick={() => dismiss(t.id)} className="text-slate-400 hover:text-slate-600" aria-label="Dismiss">
             <X className="w-4 h-4" />
           </button>

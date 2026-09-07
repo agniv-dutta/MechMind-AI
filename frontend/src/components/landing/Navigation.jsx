@@ -1,79 +1,165 @@
 import React, { useEffect, useState } from 'react';
-import { Menu, X, Cog } from 'lucide-react';
+import { Menu, X, Cpu } from 'lucide-react';
 
-const LINKS = ['Features', 'Use Cases', 'Pricing', 'Documentation', 'Contact'];
+const LINKS = ['Features', 'Use Cases', 'Pricing', 'Documentation'];
 
 export function Navigation({ onLogin, onTrial }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
+    const onScroll = () => setScrolled(window.scrollY > 12);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   return (
     <nav
-      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        scrolled ? 'bg-[#0a0e27]/95 backdrop-blur-md shadow-lg shadow-teal-500/10' : 'bg-gradient-to-r from-[#0a0e27] to-[#1a2456]'
-      }`}
-      style={{ height: '80px' }}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        height: '64px',
+        background: scrolled
+          ? 'rgba(30,42,94,0.97)'
+          : '#1e2a5e',
+        backdropFilter: scrolled ? 'blur(12px)' : 'none',
+        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.07)' : 'none',
+        boxShadow: scrolled ? '0 4px 24px rgba(0,0,0,0.25)' : 'none',
+        transition: 'all 0.3s ease',
+      }}
     >
-      <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
-        <button className="flex items-center gap-3 group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          <span className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white animate-pulse-subtle group-hover:shadow-lg group-hover:shadow-teal-500/50 transition-all duration-300">
-            <Cog className="w-6 h-6 animate-rotate-gear" />
+      <div
+        style={{
+          maxWidth: '1280px',
+          margin: '0 auto',
+          padding: '0 28px',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        {/* Logo */}
+        <button
+          style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'none', border: 'none', cursor: 'pointer' }}
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        >
+          <div
+            style={{
+              width: '38px', height: '38px',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #00897b, #4DD0C4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 0 12px rgba(77,208,196,0.35)',
+            }}
+          >
+            <Cpu style={{ width: '18px', height: '18px', color: '#ffffff' }} className="animate-pulse-subtle" />
+          </div>
+          <span style={{ fontSize: '20px', fontWeight: '800', color: '#ffffff', letterSpacing: '-0.02em' }}>
+            MechMind AI
           </span>
-          <span className="text-[28px] font-bold text-white font-['Inter']">MechMind AI</span>
         </button>
-        <div className="hidden md:flex items-center gap-8">
+
+        {/* Desktop nav links */}
+        <div className="hidden md:flex" style={{ alignItems: 'center', gap: '32px' }}>
           {LINKS.map((item) => (
-            <a 
-              key={item} 
-              href={`#${item.toLowerCase().replace(' ', '-')}`} 
-              className="text-white hover:text-teal-400 text-sm font-medium transition-colors duration-300 relative group"
+            <a
+              key={item}
+              href={`#${item.toLowerCase().replace(' ', '-')}`}
+              style={{
+                color: 'rgba(255,255,255,0.78)',
+                fontSize: '14px',
+                fontWeight: '500',
+                textDecoration: 'none',
+                transition: 'color 0.2s',
+                position: 'relative',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#4DD0C4')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,0.78)')}
             >
               {item}
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-teal-400 group-hover:w-full transition-all duration-300 group-hover:shadow-lg group-hover:shadow-teal-500/30" />
             </a>
           ))}
         </div>
-        <div className="hidden md:flex items-center gap-3">
-          <button 
-            onClick={onTrial} 
-            className="px-6 py-2 border-2 border-teal-400 text-teal-400 rounded-lg hover:bg-teal-400/10 text-sm font-bold transition-all duration-300 hover:shadow-lg hover:shadow-teal-500/20"
-            style={{ height: '36px' }}
+
+        {/* Desktop CTA buttons */}
+        <div className="hidden md:flex" style={{ alignItems: 'center', gap: '10px' }}>
+          <button
+            onClick={onTrial}
+            style={{
+              height: '36px',
+              padding: '0 20px',
+              borderRadius: '8px',
+              border: '1.5px solid rgba(77,208,196,0.6)',
+              background: 'transparent',
+              color: '#4DD0C4',
+              fontSize: '13.5px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(77,208,196,0.1)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
           >
             Start Free Trial
           </button>
-          <button 
-            onClick={onLogin} 
-            className="px-6 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 text-sm font-bold shadow-lg transition-all duration-300 hover:shadow-teal-500/40"
-            style={{ height: '36px' }}
+          <button
+            onClick={onLogin}
+            style={{
+              height: '36px',
+              padding: '0 20px',
+              borderRadius: '8px',
+              background: '#00897b',
+              border: 'none',
+              color: '#ffffff',
+              fontSize: '13.5px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              boxShadow: '0 2px 10px rgba(0,137,123,0.4)',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#00796b'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,137,123,0.55)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#00897b'; e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,137,123,0.4)'; }}
           >
             Login
           </button>
         </div>
-        <button onClick={() => setOpen(!open)} className="md:hidden text-white p-2" aria-label="Toggle menu">
-          {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+
+        {/* Mobile hamburger */}
+        <button
+          onClick={() => setOpen(!open)}
+          className="md:hidden"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ffffff', padding: '6px' }}
+        >
+          {open ? <X style={{ width: '22px', height: '22px' }} /> : <Menu style={{ width: '22px', height: '22px' }} />}
         </button>
       </div>
+
+      {/* Mobile menu */}
       {open && (
-        <div className="md:hidden bg-[#0a0e27] border-t border-teal-500/20 p-4 space-y-1">
+        <div
+          style={{
+            background: 'rgba(10,14,39,0.98)',
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            padding: '12px 24px 20px',
+          }}
+        >
           {LINKS.map((item) => (
-            <a 
-              key={item} 
-              href={`#${item.toLowerCase().replace(' ', '-')}`} 
-              onClick={() => setOpen(false)} 
-              className="block text-white hover:text-teal-400 py-2 text-sm transition-colors duration-300"
+            <a
+              key={item}
+              href={`#${item.toLowerCase().replace(' ', '-')}`}
+              onClick={() => setOpen(false)}
+              style={{ display: 'block', padding: '10px 0', color: 'rgba(255,255,255,0.78)', fontSize: '14px', textDecoration: 'none' }}
             >
               {item}
             </a>
           ))}
-          <button 
-            onClick={onTrial} 
-            className="w-full mt-2 px-6 py-2.5 border-2 border-teal-400 text-teal-400 rounded-lg text-sm font-bold transition-all duration-300"
+          <button
+            onClick={onTrial}
+            style={{ marginTop: '12px', width: '100%', height: '40px', borderRadius: '8px', border: '1.5px solid rgba(77,208,196,0.6)', background: 'transparent', color: '#4DD0C4', fontWeight: '700', cursor: 'pointer' }}
           >
             Start Free Trial
           </button>

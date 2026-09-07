@@ -45,7 +45,7 @@ const TYPE_COLORS = {
   Procedure: '#a78bfa',
 };
 
-export default function KnowledgeGraph({ darkMode }) {
+export default function KnowledgeGraph() {
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
   const [stats, setStats] = useState(null);
@@ -105,21 +105,21 @@ export default function KnowledgeGraph({ darkMode }) {
 
   return (
     <div
-      className="flex-1 flex flex-col h-full bg-slate-100/60 dark:bg-[#0a0e27] overflow-hidden transition-colors duration-200"
+      className="flex-1 flex flex-col h-full bg-slate-100/60 overflow-hidden transition-colors duration-200"
       style={{
-        background: darkMode ? 'linear-gradient(#0a0e27, #1a2456)' : '#f8f9fa',
+        background: '#f8fafc',
         padding: '24px',
       }}
     >
       
       {/* 1. Page Header & Control Toolbar */}
-      <div className="p-6 bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-teal-500/10 space-y-4 shrink-0 shadow-2xs">
+      <div className="p-6 bg-white border-b border-slate-200 space-y-4 shrink-0 shadow-2xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+            <h1 className="text-3xl font-bold text-slate-900">
               Knowledge Graph
             </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-sm text-slate-500 mt-0.5">
               {stats
                 ? `${stats.total_entities} entities • ${stats.total_relationships} relationships`
                 : 'Equipment Relationships & Dependencies'}
@@ -129,12 +129,12 @@ export default function KnowledgeGraph({ darkMode }) {
           <div className="flex items-center space-x-2">
             <button
               onClick={() => { setZoom(100); setSelectedId(null); setSelectedDetail(null); }}
-              className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition-colors"
+              className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Reset View</span>
             </button>
-            <button className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition-colors" title="Legend">
+            <button className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition-colors" title="Legend">
               <Info className="w-3.5 h-3.5 text-slate-500" />
               <span>Legend</span>
             </button>
@@ -152,13 +152,13 @@ export default function KnowledgeGraph({ darkMode }) {
               value={searchVal}
               onChange={(e) => setSearchVal(e.target.value)}
               placeholder="Search entities..."
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-teal-500/20 rounded-lg text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/40"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/40"
             />
           </div>
 
           <div className="flex items-center space-x-2">
             {Object.entries(TYPE_COLORS).map(([t, color]) => (
-              <span key={t} className="inline-flex items-center space-x-1.5 px-2 py-1 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-teal-500/20 text-[10px] font-bold text-slate-600 dark:text-slate-400">
+              <span key={t} className="inline-flex items-center space-x-1.5 px-2 py-1 rounded-lg bg-slate-50 border border-slate-200 text-[10px] font-bold text-slate-600">
                 <span className="w-2.5 h-2.5 rounded-full" style={{ background: color }}></span>
                 <span>{t}</span>
               </span>
@@ -272,26 +272,26 @@ export default function KnowledgeGraph({ darkMode }) {
         </div>
 
         {/* Right Node Inspector */}
-        <div className="w-full md:w-[340px] bg-white dark:bg-[#0f172a] border-l border-slate-200 dark:border-teal-500/10 p-5 space-y-5 overflow-y-auto shrink-0 transition-colors duration-200">
+        <div className="w-full md:w-[340px] bg-white border-l border-slate-200 p-5 space-y-5 overflow-y-auto shrink-0 transition-colors duration-200">
           {!selectedNode ? (
             <div className="text-center py-10 space-y-2">
-              <BarChart2 className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
-              <p className="text-xs text-slate-400 dark:text-slate-500">
+              <BarChart2 className="w-8 h-8 text-slate-300 mx-auto" />
+              <p className="text-xs text-slate-400">
                 Select an entity node to inspect its relationships and source documents.
               </p>
             </div>
           ) : (
             <>
-              <div className="space-y-1.5 pb-4 border-b border-slate-200 dark:border-teal-500/10">
+              <div className="space-y-1.5 pb-4 border-b border-slate-200">
                 <div className="flex items-center justify-between">
                   <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#1E293B] text-white uppercase tracking-wider">
                     {(selectedNode.type || 'Entity').toUpperCase()}
                   </span>
-                  <button onClick={() => { setSelectedId(null); setSelectedDetail(null); }} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                  <button onClick={() => { setSelectedId(null); setSelectedDetail(null); }} className="text-slate-400 hover:text-slate-600">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 pt-1">
+                <h2 className="text-xl font-bold text-slate-900 pt-1">
                   {selectedNode.label || selectedNode.name}
                 </h2>
                 <p className="text-xs text-slate-400 font-mono">
@@ -302,18 +302,18 @@ export default function KnowledgeGraph({ darkMode }) {
               {selectedDetail && (
                 <div className="space-y-2">
                   <span className="text-xs font-bold text-slate-400 tracking-wider uppercase block">PROPERTIES</span>
-                  <div className="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl space-y-2 text-xs border border-slate-200/60 dark:border-teal-500/20">
+                  <div className="bg-slate-50 p-3.5 rounded-xl space-y-2 text-xs border border-slate-200/60">
                     <div className="flex justify-between">
-                      <span className="text-slate-500 dark:text-slate-400">Description</span>
-                      <span className="font-bold text-slate-900 dark:text-slate-100 text-right max-w-[70%]">{selectedDetail.properties?.description || '—'}</span>
+                      <span className="text-slate-500">Description</span>
+                      <span className="font-bold text-slate-900 text-right max-w-[70%]">{selectedDetail.properties?.description || '—'}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500 dark:text-slate-400">Frequency</span>
-                      <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{selectedDetail.frequency ?? (selectedDetail.properties?.frequency ?? '—')}</span>
+                      <span className="text-slate-500">Frequency</span>
+                      <span className="font-mono font-bold text-slate-900">{selectedDetail.frequency ?? (selectedDetail.properties?.frequency ?? '—')}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500 dark:text-slate-400">Documents</span>
-                      <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{selectedDetail.documents?.length || 0}</span>
+                      <span className="text-slate-500">Documents</span>
+                      <span className="font-mono font-bold text-slate-900">{selectedDetail.documents?.length || 0}</span>
                     </div>
                   </div>
                 </div>
@@ -331,13 +331,13 @@ export default function KnowledgeGraph({ darkMode }) {
                       <button
                         key={i}
                         onClick={() => selectNode(otherId)}
-                        className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-teal-500/20 flex items-center justify-between hover:border-teal-500/50 text-left"
+                        className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-between hover:border-teal-500/50 text-left"
                       >
                         <div className="flex items-center space-x-2">
                           <span className="w-2.5 h-2.5 rounded-full" style={{ background: color }}></span>
-                          <span className="font-bold text-slate-900 dark:text-slate-100">{other?.label || otherId}</span>
+                          <span className="font-bold text-slate-900">{other?.label || otherId}</span>
                         </div>
-                        <span className="text-[10px] font-mono text-teal-600 dark:text-teal-400 font-bold">{e.type}</span>
+                        <span className="text-[10px] font-mono text-teal-600 font-bold">{e.type}</span>
                       </button>
                     );
                   })}
@@ -348,11 +348,11 @@ export default function KnowledgeGraph({ darkMode }) {
                 <div className="space-y-2">
                   <span className="text-xs font-bold text-slate-400 tracking-wider uppercase block">SOURCE DOCUMENTS</span>
                   {selectedDetail.documents.map((d, i) => (
-                    <div key={i} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-teal-500/20 flex items-center space-x-2.5 text-xs">
+                    <div key={i} className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center space-x-2.5 text-xs">
                       <FileText className="w-4 h-4 text-red-500 shrink-0" />
                       <div className="min-w-0">
-                        <span className="font-bold text-slate-900 dark:text-slate-100 block truncate">{d.doc_id}</span>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Pages: {d.pages?.join(', ') || '—'} • {d.mentions_count} mentions</span>
+                        <span className="font-bold text-slate-900 block truncate">{d.doc_id}</span>
+                        <span className="text-[10px] text-slate-500 font-mono">Pages: {d.pages?.join(', ') || '—'} • {d.mentions_count} mentions</span>
                       </div>
                     </div>
                   ))}

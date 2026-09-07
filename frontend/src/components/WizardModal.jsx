@@ -67,27 +67,27 @@ export default function WizardModal({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-      <div className="max-w-3xl w-full bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[95vh] overflow-y-auto space-y-6">
+      <div className="max-w-3xl w-full bg-white rounded-2xl p-8 shadow-2xl border border-slate-200 max-h-[95vh] overflow-y-auto space-y-6">
         
         {/* Header */}
         <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+            <h2 className="text-2xl font-bold text-slate-900">
               Quick Troubleshooting Wizard
             </h2>
-            <button onClick={handleClose} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <button onClick={handleClose} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>
 
           <div className="flex items-center space-x-2 pt-1">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-wider uppercase">
+            <span className="text-xs font-semibold text-slate-500 tracking-wider uppercase">
               {step === 'select' ? 'STEP 1 OF 2: EQUIPMENT SELECTION' : step === 'symptom' ? 'STEP 2 OF 2: SYMPTOM DESCRIPTION' : 'QUICK FIX GENERATED'}
             </span>
           </div>
 
-          <p className="text-sm text-slate-600 dark:text-slate-400 pt-2">
+          <p className="text-sm text-slate-600 pt-2">
             {step === 'select'
               ? 'Select the primary equipment type experiencing the issue to begin targeted diagnostics.'
               : step === 'symptom'
@@ -108,8 +108,8 @@ export default function WizardModal({ isOpen, onClose }) {
                     onClick={() => setSelectedEquipment(item.id)}
                     className={`p-6 text-center rounded-xl transition-all cursor-pointer relative flex flex-col items-center justify-center ${
                       isSelected
-                        ? 'border-2 border-slate-900 dark:border-teal-400 bg-white dark:bg-slate-800 shadow-sm'
-                        : 'bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60'
+                        ? 'border-2 border-slate-900 bg-white shadow-sm'
+                        : 'bg-slate-50 hover:bg-slate-100 border border-slate-200/60'
                     }`}
                   >
                     {isSelected && (
@@ -118,12 +118,12 @@ export default function WizardModal({ isOpen, onClose }) {
                       </div>
                     )}
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-colors ${
-                      isSelected ? 'bg-slate-900 text-white dark:bg-teal-500 dark:text-slate-950' : 'bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                      isSelected ? 'bg-slate-900 text-white' : 'bg-slate-200/80 text-slate-600'
                     }`}>
                       <Icon className="w-5 h-5" />
                     </div>
-                    <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">{item.title}</h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{item.subtitle}</p>
+                    <h3 className="font-semibold text-sm text-slate-900">{item.title}</h3>
+                    <p className="text-xs text-slate-500 mt-1">{item.subtitle}</p>
                   </div>
                 );
               })}
@@ -133,7 +133,7 @@ export default function WizardModal({ isOpen, onClose }) {
 
         {step === 'symptom' && (
           <div className="space-y-4">
-            <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl p-5 space-y-2">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-2">
               <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                 SYMPTOM / FAULT DESCRIPTION
               </label>
@@ -142,14 +142,14 @@ export default function WizardModal({ isOpen, onClose }) {
                 value={symptom}
                 onChange={(e) => setSymptom(e.target.value)}
                 placeholder="e.g. Overheating above 80C during startup, pressure fluctuating, vibration increasing..."
-                className="w-full px-3.5 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/40"
+                className="w-full px-3.5 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/40"
               />
               <p className="text-[11px] text-slate-400">
                 The wizard will match your symptom against the indexed knowledge base and produce a structured field checklist.
               </p>
             </div>
             {error && (
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs font-semibold text-red-700 dark:text-red-300 flex items-center space-x-2">
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs font-semibold text-red-700 flex items-center space-x-2">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span>{error}</span>
               </div>
@@ -159,18 +159,18 @@ export default function WizardModal({ isOpen, onClose }) {
 
         {step === 'results' && result && (
           <div className="space-y-5">
-            <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+            <div className="p-5 rounded-xl bg-slate-50 border border-slate-200">
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">IDENTIFIED PROBLEM</span>
-              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{result.problem || '—'}</p>
+              <p className="text-sm font-semibold text-slate-900">{result.problem || '—'}</p>
             </div>
 
             {result.root_causes?.length > 0 && (
               <div className="space-y-2">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">LIKELY ROOT CAUSES</span>
                 {result.root_causes.map((rc, i) => (
-                  <div key={i} className="flex items-start space-x-2.5 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm">
-                    <span className="w-5 h-5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-300 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">{i + 1}</span>
-                    <p className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed">{rc}</p>
+                  <div key={i} className="flex items-start space-x-2.5 p-3 rounded-xl bg-white border border-slate-200 text-sm">
+                    <span className="w-5 h-5 rounded-full bg-amber-500/15 text-amber-600 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">{i + 1}</span>
+                    <p className="text-slate-700 text-xs leading-relaxed">{rc}</p>
                   </div>
                 ))}
               </div>
@@ -180,14 +180,14 @@ export default function WizardModal({ isOpen, onClose }) {
               <div className="space-y-2">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">FIELD Action STEPS</span>
                 {result.steps.map((s, i) => (
-                  <div key={i} className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <div key={i} className="p-4 rounded-xl bg-white border border-slate-200">
                     <div className="flex items-center space-x-2 mb-1.5">
                       <span className="w-6 h-6 rounded-full bg-[#0D6857] text-white flex items-center justify-center text-[10px] font-bold">{s.step ?? i + 1}</span>
-                      <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{s.action}</span>
+                      <span className="text-sm font-bold text-slate-900">{s.action}</span>
                     </div>
                     {s.expected && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400 pl-8">
-                        <span className="font-semibold text-slate-600 dark:text-slate-300">Expected: </span>{s.expected}
+                      <p className="text-xs text-slate-500 pl-8">
+                        <span className="font-semibold text-slate-600">Expected: </span>{s.expected}
                       </p>
                     )}
                   </div>
@@ -200,7 +200,7 @@ export default function WizardModal({ isOpen, onClose }) {
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">SOURCES USED</span>
                 <div className="flex flex-wrap gap-2">
                   {result.sources_used.map((s, i) => (
-                    <span key={i} className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 text-[11px] font-semibold border border-blue-500/20">
+                    <span key={i} className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-700 text-[11px] font-semibold border border-blue-500/20">
                       <FileText className="w-3 h-3" />
                       <span className="max-w-[220px] truncate">{s}</span>
                     </span>
@@ -213,10 +213,10 @@ export default function WizardModal({ isOpen, onClose }) {
               <div className="space-y-2">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">CITATIONS</span>
                 {result.citations.map((c, i) => (
-                  <div key={i} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs">
-                    <span className="font-bold text-slate-900 dark:text-slate-100">{c.source_doc}</span>
+                  <div key={i} className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                    <span className="font-bold text-slate-900">{c.source_doc}</span>
                     <span className="ml-2 font-mono text-[10px] text-slate-400">page {c.page}</span>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1 text-[11px] line-clamp-2">{c.excerpt}</p>
+                    <p className="text-slate-500 mt-1 text-[11px] line-clamp-2">{c.excerpt}</p>
                   </div>
                 ))}
               </div>
@@ -225,15 +225,15 @@ export default function WizardModal({ isOpen, onClose }) {
         )}
 
         {/* Footer Navigation */}
-        <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-5 mt-6">
+        <div className="flex items-center justify-between border-t border-slate-200 pt-5 mt-6">
           {step === 'select' ? (
-            <button disabled className="px-4 py-2 rounded-lg text-sm font-medium text-slate-400 bg-slate-100 dark:bg-slate-800 cursor-not-allowed border border-slate-200/60 dark:border-slate-700/60 opacity-60">
+            <button disabled className="px-4 py-2 rounded-lg text-sm font-medium text-slate-400 bg-slate-100 cursor-not-allowed border border-slate-200/60 opacity-60">
               Back
             </button>
           ) : (
             <button
               onClick={() => { setStep('select'); setError(''); }}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center space-x-1"
+              className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 bg-slate-100 border border-slate-200/60 hover:bg-slate-200 flex items-center space-x-1"
             >
               <ChevronLeft className="w-4 h-4" />
               <span>Back</span>
@@ -241,7 +241,7 @@ export default function WizardModal({ isOpen, onClose }) {
           )}
 
           <div className="flex items-center space-x-3">
-            <button onClick={handleClose} className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 text-sm font-medium px-4 py-2">
+            <button onClick={handleClose} className="text-slate-600 hover:text-slate-900 text-sm font-medium px-4 py-2">
               Cancel
             </button>
 

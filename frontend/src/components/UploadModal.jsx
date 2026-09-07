@@ -116,16 +116,16 @@ export default function UploadModal({ isOpen, onClose, onUploaded }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-      <div className="max-w-xl w-full bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto space-y-5">
+      <div className="max-w-xl w-full bg-white rounded-2xl p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto space-y-5">
         
         {/* 1. Modal Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
             Upload Technical Documentation
           </h2>
           <button
             onClick={() => { reset(); onClose(); }}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -136,29 +136,29 @@ export default function UploadModal({ isOpen, onClose, onUploaded }) {
           onClick={() => fileInputRef.current?.click()}
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleDrop}
-          className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-6 bg-slate-50/50 dark:bg-slate-800/40 text-center flex flex-col items-center justify-center space-y-2 cursor-pointer hover:border-teal-500 dark:hover:border-teal-400 transition-colors group"
+          className="border-2 border-dashed border-slate-300 rounded-xl p-6 bg-slate-50/50 text-center flex flex-col items-center justify-center space-y-2 cursor-pointer hover:border-teal-500 transition-colors group"
         >
           {selectedFile ? (
             <>
-              <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <FileText className="w-6 h-6" />
               </div>
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+              <p className="text-sm font-semibold text-slate-800">
                 {selectedFile.name}
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500">
                 {formatSize(selectedFile.size)}
               </p>
             </>
           ) : (
             <>
-              <div className="w-12 h-12 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <UploadCloud className="w-6 h-6" />
               </div>
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+              <p className="text-sm font-semibold text-slate-800">
                 Drag files here or click to select
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500">
                 PDF, DOCX, PNG, JPG, TIFF up to 100MB
               </p>
             </>
@@ -170,11 +170,11 @@ export default function UploadModal({ isOpen, onClose, onUploaded }) {
         {phase !== 'idle' && phase !== 'done' && (
           <div className="space-y-2.5">
             <div className="space-y-1">
-              <div className="flex justify-between text-xs font-semibold text-slate-600 dark:text-slate-400">
+              <div className="flex justify-between text-xs font-semibold text-slate-600">
                 <span>{phase === 'uploading' ? 'Uploading...' : 'Processing document...'}</span>
-                <span className="font-mono text-teal-600 dark:text-teal-400">{progress}%</span>
+                <span className="font-mono text-teal-600">{progress}%</span>
               </div>
-              <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
+              <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
                 <div className={`h-full bg-teal-500 rounded-full transition-all ${phase === 'processing' ? 'animate-pulse' : ''}`} style={{ width: `${progress}%` }}></div>
               </div>
             </div>
@@ -185,8 +185,8 @@ export default function UploadModal({ isOpen, onClose, onUploaded }) {
           <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-start space-x-2.5 text-sm">
             <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold text-emerald-700 dark:text-emerald-300">Upload complete</p>
-              <p className="text-xs text-emerald-600/90 dark:text-emerald-400/90 mt-0.5">{resultMsg}</p>
+              <p className="font-bold text-emerald-700">Upload complete</p>
+              <p className="text-xs text-emerald-600/90 mt-0.5">{resultMsg}</p>
             </div>
           </div>
         )}
@@ -194,13 +194,13 @@ export default function UploadModal({ isOpen, onClose, onUploaded }) {
         {phase === 'error' && (
           <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start space-x-2.5 text-sm">
             <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-            <p className="font-semibold text-red-700 dark:text-red-300">{errorMsg}</p>
+            <p className="font-semibold text-red-700">{errorMsg}</p>
           </div>
         )}
 
         {/* 4. AUTO-EXTRACTED METADATA Card */}
-        <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl space-y-3 border border-slate-200/80 dark:border-slate-700/60">
-          <div className="flex items-center space-x-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+        <div className="bg-slate-50 p-4 rounded-xl space-y-3 border border-slate-200/80">
+          <div className="flex items-center space-x-2 text-xs font-bold text-slate-800">
             <Tag className="w-3.5 h-3.5 text-teal-500" />
             <span>DOCUMENT METADATA</span>
           </div>
@@ -209,14 +209,14 @@ export default function UploadModal({ isOpen, onClose, onUploaded }) {
             {/* Grid Row 1: Equipment Type & Category */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+                <label className="block text-[11px] font-medium text-slate-500 mb-1">
                   Equipment Type
                 </label>
                 <div className="relative">
                   <select
                     value={equipmentType}
                     onChange={(e) => setEquipmentType(e.target.value)}
-                    className="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 appearance-none font-semibold focus:outline-none focus:ring-1 focus:ring-teal-500"
+                    className="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 appearance-none font-semibold focus:outline-none focus:ring-1 focus:ring-teal-500"
                   >
                     <option value="">Select equipment...</option>
                     {EQUIPMENT_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
@@ -226,14 +226,14 @@ export default function UploadModal({ isOpen, onClose, onUploaded }) {
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+                <label className="block text-[11px] font-medium text-slate-500 mb-1">
                   Category
                 </label>
                 <div className="relative">
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 appearance-none font-semibold focus:outline-none focus:ring-1 focus:ring-teal-500"
+                    className="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 appearance-none font-semibold focus:outline-none focus:ring-1 focus:ring-teal-500"
                   >
                     <option value="">Select category...</option>
                     {CATEGORY_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
@@ -245,7 +245,7 @@ export default function UploadModal({ isOpen, onClose, onUploaded }) {
 
             {/* Grid Row 2: Version */}
             <div>
-              <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+              <label className="block text-[11px] font-medium text-slate-500 mb-1">
                 Version
               </label>
               <input
@@ -253,13 +253,13 @@ export default function UploadModal({ isOpen, onClose, onUploaded }) {
                 value={version}
                 onChange={(e) => setVersion(e.target.value)}
                 placeholder="e.g. v2.0"
-                className="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-mono focus:outline-none focus:ring-1 focus:ring-teal-500"
+                className="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 font-mono focus:outline-none focus:ring-1 focus:ring-teal-500"
               />
             </div>
 
             {/* Grid Row 3: Tags */}
             <div>
-              <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+              <label className="block text-[11px] font-medium text-slate-500 mb-1.5">
                 Tags
               </label>
               <div className="flex flex-wrap items-center gap-1.5">
@@ -284,7 +284,7 @@ export default function UploadModal({ isOpen, onClose, onUploaded }) {
                   onChange={(e) => setNewTagInput(e.target.value)}
                   onKeyDown={handleAddTag}
                   placeholder="Add tag..."
-                  className="px-2 py-0.5 text-[11px] bg-transparent text-slate-700 dark:text-slate-300 placeholder-slate-400 focus:outline-none w-24"
+                  className="px-2 py-0.5 text-[11px] bg-transparent text-slate-700 placeholder-slate-400 focus:outline-none w-24"
                 />
               </div>
             </div>
@@ -297,7 +297,7 @@ export default function UploadModal({ isOpen, onClose, onUploaded }) {
             <button
               onClick={() => { reset(); onClose(); }}
               disabled={phase === 'uploading' || phase === 'processing'}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 border border-slate-300 hover:bg-slate-100 transition-colors disabled:opacity-50"
             >
               {phase === 'done' ? 'Close' : 'Cancel'}
             </button>

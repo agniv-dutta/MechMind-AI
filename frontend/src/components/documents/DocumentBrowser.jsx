@@ -13,7 +13,7 @@ export function DocumentBrowser({ viewMode = 'grid', onSelect, onDelete }) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <FileText className="w-12 h-12 text-slate-300 mb-3" />
-        <h3 className="font-bold text-slate-900 dark:text-slate-100">No documents uploaded yet</h3>
+        <h3 className="font-bold text-slate-900">No documents uploaded yet</h3>
         <p className="text-sm text-slate-500">Upload your first technical manual to get started</p>
       </div>
     );

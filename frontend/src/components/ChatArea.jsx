@@ -1,63 +1,212 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { 
-  Bot, 
-  Paperclip, 
-  Link as LinkIcon, 
-  Send, 
-  SlidersHorizontal, 
-  MoreVertical, 
-  RotateCcw, 
+import {
+  Bot,
+  Paperclip,
+  Link as LinkIcon,
+  Send,
+  SlidersHorizontal,
+  RotateCcw,
+  MoreVertical,
   ChevronRight,
-  Mic,
   Loader2,
-  AlertTriangle
+  AlertTriangle,
+  Mic,
 } from 'lucide-react';
 import { chatStream, getAIConfig } from '../lib/api';
 
 const SUGGESTIONS = [
-  'Check vibration history',
-  'View P&ID diagram',
+  'How to reset Turbine B-42...',
+  'Check lubrication specs',
+  'Summarize latest error logs',
 ];
 
-export default function ChatArea({ 
+function formatTime(date) {
+  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+/** Render a plain-text AI response with basic markdown (bold, bullets, numbered) */
+function AiMessageContent({ text }) {
+  if (!text) return null;
+
+  // Split into lines and process
+  const lines = text.split('\n');
+  const elements = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    if (!line.trim()) {
+      elements.push(<div key={i} style={{ height: '6px' }} />);
+      i++;
+      continue;
+    }
+
+    // Heading lines (e.g. "Initial Diagnostic Steps:")
+    if (/^[A-Z].+:$/.test(line.trim()) && line.trim().length < 60) {
+      elements.push(
+        <p key={i} style={{ fontWeight: '700', color: '#111827', marginBottom: '6px', marginTop: i > 0 ? '10px' : '0' }}>
+          {line.trim()}
+        </p>
+      );
+      i++;
+      continue;
+    }
+
+    // Numbered list
+    const numMatch = line.match(/^(\d+)\.\s+(.+)/);
+    if (numMatch) {
+      const items = [];
+      while (i < lines.length) {
+        const m = lines[i].match(/^(\d+)\.\s+(.+)/);
+        if (!m) break;
+        items.push({ num: m[1], text: m[2] });
+        i++;
+      }
+      elements.push(
+        <ol key={`ol-${i}`} style={{ paddingLeft: '4px', margin: '6px 0' }}>
+          {items.map((item, idx) => (
+            <li key={idx} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'flex-start' }}>
+              <span style={{ minWidth: '18px', fontWeight: '700', color: '#00897b', fontSize: '13px' }}>{item.num}.</span>
+              <span style={{ fontSize: '13.5px', lineHeight: '1.6', color: '#374151' }}>
+                <InlineText text={item.text} />
+              </span>
+            </li>
+          ))}
+        </ol>
+      );
+      continue;
+    }
+
+    // Bullet list
+    if (line.match(/^[•\-\*]\s+/)) {
+      const items = [];
+      while (i < lines.length && lines[i].match(/^[•\-\*]\s+/)) {
+        items.push(lines[i].replace(/^[•\-\*]\s+/, ''));
+        i++;
+      }
+      elements.push(
+        <ul key={`ul-${i}`} style={{ paddingLeft: '4px', margin: '6px 0' }}>
+          {items.map((item, idx) => (
+            <li key={idx} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'flex-start' }}>
+              <span style={{ minWidth: '6px', marginTop: '7px', width: '6px', height: '6px', borderRadius: '50%', background: '#00897b', flexShrink: 0 }} />
+              <span style={{ fontSize: '13.5px', lineHeight: '1.6', color: '#374151' }}>
+                <InlineText text={item} />
+              </span>
+            </li>
+          ))}
+        </ul>
+      );
+      continue;
+    }
+
+    // Normal paragraph
+    elements.push(
+      <p key={i} style={{ fontSize: '13.5px', lineHeight: '1.65', color: '#374151', marginBottom: '4px' }}>
+        <InlineText text={line} />
+      </p>
+    );
+    i++;
+  }
+
+  return <>{elements}</>;
+}
+
+/** Render inline bold (**text**) and citation refs ([1]) */
+function InlineText({ text }) {
+  const parts = text.split(/(\*\*[^*]+\*\*|\[\d+\])/g);
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return <strong key={i} style={{ fontWeight: '700', color: '#111827' }}>{part.slice(2, -2)}</strong>;
+        }
+        if (/^\[\d+\]$/.test(part)) {
+          return (
+            <span
+              key={i}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '18px',
+                height: '18px',
+                borderRadius: '4px',
+                background: '#e0f2fe',
+                color: '#0369a1',
+                fontSize: '10px',
+                fontWeight: '700',
+                margin: '0 2px',
+                verticalAlign: 'middle',
+              }}
+            >
+              {part.slice(1, -1)}
+            </span>
+          );
+        }
+        return part;
+      })}
+    </>
+  );
+}
+
+export default function ChatArea({
   initialQuery = '',
-  activeCitation, 
+  activeCitation,
   onCitationClick,
   onSourcesChange,
   onStreamingChange,
-  darkMode
 }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
-  const [sessionId, setSessionId] = useState('');
   const [streamError, setStreamError] = useState('');
   const [offlineMode, setOfflineMode] = useState(false);
+  const [sessionId, setSessionId] = useState('');
   const abortRef = useRef(null);
   const scrollRef = useRef(null);
   const didPrefill = useRef(false);
+  const textareaRef = useRef(null);
 
+  // Initialize Session
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    setSessionId(`session-${Date.now().toString(36)}`);
+  }, []);
 
-  useEffect(() => {
-    getAIConfig().then((cfg) => setOfflineMode(cfg.mode !== 'groq')).catch(() => {});
+  const scrollToBottom = useCallback(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
   }, []);
 
   useEffect(() => {
+    scrollToBottom();
+  }, [messages, isStreaming, scrollToBottom]);
+
+  // Execute Preload Query if passed
+  useEffect(() => {
     if (initialQuery && !didPrefill.current) {
       didPrefill.current = true;
-      setInput(initialQuery);
+      sendMessage(initialQuery);
     }
   }, [initialQuery]);
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  const bg = '#f8fafc';
+  const cardBg = '#ffffff';
+  const borderCol = '#e2e8f0';
 
   const resetSession = useCallback(() => {
     abortRef.current?.abort();
     setSessionId('');
     setMessages([]);
     setStreamError('');
-    setOfflineMode(false);
     if (onSourcesChange) onSourcesChange([]);
     if (onStreamingChange) onStreamingChange(false);
   }, [onSourcesChange, onStreamingChange]);
@@ -70,18 +219,8 @@ export default function ChatArea({
     setIsStreaming(true);
     if (onStreamingChange) onStreamingChange(true);
 
-    const userMsg = {
-      id: `u-${Date.now()}`,
-      role: 'user',
-      content: text,
-    };
-    const assistantMsg = {
-      id: `a-${Date.now()}`,
-      role: 'assistant',
-      content: '',
-      citations: [],
-      offline: false,
-    };
+    const userMsg = { id: `u-${Date.now()}`, role: 'user', content: text, time: new Date() };
+    const assistantMsg = { id: `a-${Date.now()}`, role: 'assistant', content: '', citations: [], time: new Date() };
     setMessages((prev) => [...prev, userMsg, assistantMsg]);
 
     const history = messages
@@ -119,9 +258,6 @@ export default function ChatArea({
             }
           },
           onError: (msg) => {
-            setMessages((prev) =>
-              prev.map((m) => (m.id === assistantMsg.id && !m.content ? { ...m, content: '' } : m))
-            );
             setStreamError(msg);
             setIsStreaming(false);
             if (onStreamingChange) onStreamingChange(false);
@@ -143,163 +279,384 @@ export default function ChatArea({
     }
   }, [input, isStreaming, messages, sessionId, onSourcesChange, onStreamingChange]);
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
-  const suggestionClick = (s) => sendMessage(s);
+  const lastAssistantId = messages.filter((m) => m.role === 'assistant').at(-1)?.id;
 
   return (
     <main
-      className="flex-1 flex flex-col h-full bg-slate-100/60 dark:bg-[#0a0e27] min-w-0 transition-colors duration-200"
       style={{
-        background: darkMode ? 'linear-gradient(#0a0e27, #1a2456)' : '#f8f9fa',
-        padding: '24px',
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        background: bg,
+        minWidth: 0,
       }}
     >
-      {/* Chat Header */}
-      <div className="h-16 px-6 bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-teal-500/10 flex items-center justify-between shrink-0 shadow-xs">
-        <div className="flex items-center space-x-3">
-          <div className="w-9 h-9 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-300 flex items-center justify-center border border-teal-500/20">
-            <Bot className="w-5 h-5" />
+      {/* ── Chat Header ──────────────────────────────────────────────────── */}
+      <div
+        style={{
+          height: '64px',
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 20px',
+          background: cardBg,
+          borderBottom: `1px solid ${borderCol}`,
+          boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* Bot avatar */}
+          <div
+            style={{
+              width: '40px', height: '40px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #1e2a5e, #00897b)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 2px 8px rgba(0,137,123,0.3)',
+              position: 'relative',
+            }}
+          >
+            <Bot style={{ width: '20px', height: '20px', color: '#ffffff' }} />
+            <span
+              style={{
+                position: 'absolute', bottom: '1px', right: '1px',
+                width: '9px', height: '9px',
+                borderRadius: '50%',
+                background: '#22c55e',
+                border: `2px solid ${cardBg}`,
+              }}
+            />
           </div>
           <div>
-            <div className="flex items-center space-x-2">
-              <h1 className="text-base font-bold text-slate-900 dark:text-slate-100">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h1
+                style={{
+                  fontSize: '15px',
+                  fontWeight: '700',
+                  color: '#111827',
+                  margin: 0,
+                }}
+              >
                 MechMind Assistant
               </h1>
               {isStreaming ? (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-teal-500/15 text-teal-600 dark:text-teal-300 border border-teal-500/30 animate-pulse tracking-wide">
-                  <Loader2 className="w-3 h-3 mr-1 animate-spin text-teal-500" />
-                  STREAMING
+                <span
+                  className="animate-pulse"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '5px',
+                    padding: '2px 8px',
+                    borderRadius: '20px',
+                    fontSize: '10px', fontWeight: '700',
+                    background: 'rgba(0,137,123,0.12)',
+                    color: '#00897b',
+                    border: '1px solid rgba(0,137,123,0.25)',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  <Loader2 style={{ width: '10px', height: '10px', animation: 'spin 1s linear infinite' }} />
+                  GENERATING
                 </span>
               ) : (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 tracking-wide">
-                  READY
+                <span
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '5px',
+                    padding: '2px 8px',
+                    borderRadius: '20px',
+                    fontSize: '10px', fontWeight: '700',
+                    background: 'rgba(34,197,94,0.1)',
+                    color: '#16a34a',
+                    border: '1px solid rgba(34,197,94,0.25)',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  AI ONLINE
                 </span>
               )}
             </div>
-            <div className="flex items-center space-x-2 mt-0.5">
-              <span className="inline-flex items-center text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${isStreaming ? 'bg-teal-400 animate-ping' : 'bg-emerald-500'}`}></span>
-                {offlineMode ? 'OFFLINE MODE • NO LLM KEY' : isStreaming ? 'ANALYZING' : 'READY FOR QUERIES'}
-              </span>
-            </div>
+            <p
+              style={{
+                fontSize: '11px',
+                color: '#64748b',
+                margin: '1px 0 0',
+                letterSpacing: '0.06em',
+                fontWeight: '500',
+              }}
+            >
+              {offlineMode
+                ? '⚠ OFFLINE MODE • NO LLM KEY'
+                : isStreaming
+                  ? '⏳ ANALYZING • DIAGNOSTIC MODE'
+                  : '● AI ONLINE • DIAGNOSTIC MODE'}
+            </p>
           </div>
         </div>
 
-        {/* Top-Right Action Icons */}
-        <div className="flex items-center space-x-1">
-          <button 
-            title="Session Options" 
-            className="p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <button
+            title="Session Options"
+            style={{ width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
           >
-            <SlidersHorizontal className="w-4 h-4" />
+            <SlidersHorizontal style={{ width: '15px', height: '15px' }} />
           </button>
-          <button 
-            title="Reset Session" 
+          <button
+            title="Reset Session"
             onClick={resetSession}
-            className="p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+            style={{ width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw style={{ width: '15px', height: '15px' }} />
           </button>
-          <button 
-            title="More Options" 
-            className="p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+          <button
+            title="More Options"
+            style={{ width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
           >
-            <MoreVertical className="w-4 h-4" />
+            <MoreVertical style={{ width: '15px', height: '15px' }} />
           </button>
         </div>
       </div>
 
-      {/* Messages Scroll Area */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+      {/* ── Messages ─────────────────────────────────────────────────────── */}
+      <div
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px 24px 12px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '20px',
+        }}
+      >
+        {/* Date pill */}
         {messages.length === 0 && (
-          <div className="flex justify-center">
-            <span className="px-3.5 py-1 rounded-full text-xs font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400 shadow-xs border border-slate-300/50 dark:border-teal-500/20">
-              {offlineMode ? 'Offline mode active' : 'New conversation'}
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <span
+              style={{
+                padding: '4px 14px',
+                borderRadius: '20px',
+                fontSize: '12px',
+                fontWeight: '600',
+                background: 'rgba(0,0,0,0.06)',
+                color: '#6b7280',
+              }}
+            >
+              {offlineMode ? 'Offline mode active' : `Today, ${formatTime(new Date())}`}
             </span>
           </div>
         )}
 
-        {messages.map((msg) => 
-          msg.role === 'user' ? (
-            <div key={msg.id} className="flex flex-col items-end max-w-2xl ml-auto">
-              <div className="bg-[#0D6857] text-white px-5 py-4 rounded-2xl rounded-br-none shadow-md space-y-1">
-                <p className="text-sm font-normal leading-relaxed tracking-wide whitespace-pre-wrap">{msg.content}</p>
+        {messages.map((msg, idx) => {
+          const isFirst = idx === 0 || messages[idx - 1]?.role !== msg.role;
+
+          if (msg.role === 'user') {
+            return (
+              <div
+                key={msg.id}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', maxWidth: '72%', marginLeft: 'auto' }}
+              >
+                <div
+                  style={{
+                    background: '#1a3a52',
+                    color: '#ffffff',
+                    padding: '14px 18px',
+                    borderRadius: '18px 18px 4px 18px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                    fontSize: '14px',
+                    lineHeight: '1.6',
+                    whiteSpace: 'pre-wrap',
+                  }}
+                >
+                  {msg.content}
+                </div>
+                <span
+                  style={{
+                    marginTop: '4px',
+                    fontSize: '11px',
+                    color: '#94a3b8',
+                    paddingRight: '4px',
+                  }}
+                >
+                  Technician J. Doe{msg.time ? ` · ${formatTime(msg.time)}` : ''}
+                </span>
               </div>
-              <span className="mt-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 pr-1">
-                You
-              </span>
-            </div>
-          ) : (
-            <div key={msg.id} className="flex items-start space-x-3.5 max-w-3xl">
-              <div className="w-9 h-9 rounded-xl bg-slate-900 text-teal-300 dark:bg-slate-800 dark:text-teal-300 flex items-center justify-center shrink-0 border border-teal-500/30 shadow-md">
-                <Bot className="w-5 h-5" />
+            );
+          }
+
+          // Assistant message
+          return (
+            <div
+              key={msg.id}
+              style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', maxWidth: '82%' }}
+            >
+              {/* Avatar */}
+              <div
+                style={{
+                  width: '34px', height: '34px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #1e2a5e, #00897b)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
+                  marginTop: '2px',
+                  boxShadow: '0 2px 6px rgba(0,137,123,0.25)',
+                }}
+              >
+                <Bot style={{ width: '16px', height: '16px', color: '#ffffff' }} />
               </div>
-              <div className="flex-1 space-y-3">
-                <div className="bg-[#F1F5F9] dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 p-5 rounded-2xl rounded-tl-none border border-slate-200/90 dark:border-teal-500/10 shadow-sm space-y-4">
-                  {msg.content ? (
-                    <p className="text-sm leading-relaxed font-normal text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{msg.content}</p>
-                  ) : (
-                    <div className="space-y-2.5">
-                      <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-full animate-pulse"></div>
-                      <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-4/5 animate-pulse"></div>
-                      <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-3/5 animate-pulse"></div>
-                    </div>
-                  )}
-                  {isStreaming && msg.id === messages[messages.length - 1]?.id && (
-                    <span className="inline-block w-2 h-4 bg-teal-400 animate-pulse align-middle"></span>
+
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {/* Name + streaming badge */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#111827' }}>
+                    MechMind Assistant
+                  </span>
+                  {isStreaming && msg.id === lastAssistantId && (
+                    <span
+                      className="animate-pulse"
+                      style={{
+                        fontSize: '10px', fontWeight: '700',
+                        padding: '1px 7px',
+                        borderRadius: '20px',
+                        background: 'rgba(0,137,123,0.12)',
+                        color: '#00897b',
+                        border: '1px solid rgba(0,137,123,0.2)',
+                        letterSpacing: '0.04em',
+                      }}
+                    >
+                      ⚡ GENERATING
+                    </span>
                   )}
                 </div>
 
+                {/* Message card */}
+                <div
+                  style={{
+                    background: '#ffffff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '4px 18px 18px 18px',
+                    padding: '16px 18px',
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+                  }}
+                >
+                  {msg.content ? (
+                    <AiMessageContent text={msg.content} />
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {[100, 80, 60].map((w, i) => (
+                        <div key={i} className="skeleton" style={{ height: '12px', borderRadius: '6px', width: `${w}%` }} />
+                      ))}
+                    </div>
+                  )}
+                  {/* Blinking cursor while streaming */}
+                  {isStreaming && msg.id === lastAssistantId && msg.content && (
+                    <span
+                      className="animate-typing-cursor"
+                      style={{ display: 'inline-block', width: '2px', height: '15px', background: '#00897b', marginLeft: '2px', verticalAlign: 'text-bottom', borderRadius: '1px' }}
+                    />
+                  )}
+                </div>
+
+                {/* Citation chips */}
                 {msg.citations && msg.citations.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pt-1">
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
                     {msg.citations.map((c) => (
                       <button
                         key={c.id ?? `${c.source_doc}-${c.page}`}
                         onClick={() => onCitationClick && onCitationClick(c)}
-                        className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all flex items-center space-x-1.5 ${
-                          activeCitation?.id === c.id
-                            ? 'bg-teal-50 dark:bg-teal-950 border-teal-500 text-teal-700 dark:text-teal-300'
-                            : 'bg-white dark:bg-[#0f172a] border-slate-200 dark:border-teal-500/10 text-slate-600 dark:text-slate-400 hover:border-teal-500/50'
-                        }`}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          padding: '4px 10px',
+                          borderRadius: '20px',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          border: activeCitation?.id === c.id
+                            ? '1px solid #00897b'
+                            : '1px solid #e5e7eb',
+                          background: activeCitation?.id === c.id
+                            ? '#f0fdf9'
+                            : '#f9fafb',
+                          color: activeCitation?.id === c.id
+                            ? '#00897b'
+                            : '#6b7280',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                        }}
                       >
-                        <span className="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
-                        <span className="max-w-[180px] truncate">{c.source_doc}</span>
-                        <span className="font-mono">p.{c.page}</span>
+                        <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#00897b', flexShrink: 0 }} />
+                        <span style={{ maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {c.source_doc}
+                        </span>
+                        <span style={{ fontFamily: 'monospace', opacity: 0.7 }}>p.{c.page}</span>
                       </button>
                     ))}
                   </div>
                 )}
               </div>
             </div>
-          )
-        )}
+          );
+        })}
 
+        {/* Empty state suggestions */}
         {messages.length === 0 && !isStreaming && (
-          <div className="flex flex-wrap gap-2 pt-1 pl-12">
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', paddingLeft: '46px', marginTop: '4px' }}>
             {SUGGESTIONS.map((sugg, idx) => (
               <button
                 key={idx}
-                onClick={() => suggestionClick(sugg)}
-                className="px-3.5 py-1.5 rounded-full bg-white dark:bg-[#0f172a] text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-teal-500/10 hover:border-teal-500/50 hover:text-teal-600 dark:hover:text-teal-300 transition-all shadow-2xs flex items-center space-x-1 group"
+                onClick={() => sendMessage(sugg)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '8px 14px',
+                  borderRadius: '20px',
+                  fontSize: '12.5px',
+                  fontWeight: '500',
+                  border: '1px solid #e5e7eb',
+                  background: '#ffffff',
+                  color: '#374151',
+                  cursor: 'pointer',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#00897b';
+                  e.currentTarget.style.color = '#00897b';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#e5e7eb';
+                  e.currentTarget.style.color = '#374151';
+                }}
               >
                 <span>{sugg}</span>
-                <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-teal-500 transition-transform group-hover:translate-x-0.5" />
+                <ChevronRight style={{ width: '12px', height: '12px', opacity: 0.5 }} />
               </button>
             ))}
           </div>
         )}
 
+        {/* Stream error */}
         {streamError && (
-          <div className="flex items-center justify-center">
-            <span className="inline-flex items-center px-3.5 py-2 rounded-xl text-xs font-semibold bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-300 border border-red-500/30 space-x-1.5">
-              <AlertTriangle className="w-3.5 h-3.5" />
-              <span>{streamError}</span>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <span
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                padding: '8px 14px',
+                borderRadius: '10px',
+                fontSize: '12px', fontWeight: '600',
+                background: 'rgba(239,68,68,0.08)',
+                color: '#dc2626',
+                border: '1px solid rgba(239,68,68,0.2)',
+              }}
+            >
+              <AlertTriangle style={{ width: '13px', height: '13px' }} />
+              {streamError}
             </span>
           </div>
         )}
@@ -307,41 +664,119 @@ export default function ChatArea({
         <div ref={scrollRef} />
       </div>
 
-      {/* Input Area */}
-      <div className="p-4 bg-white dark:bg-[#0f172a] border-t border-slate-200 dark:border-teal-500/10 shrink-0">
-        <div className="rounded-2xl bg-slate-100/80 dark:bg-slate-800/40 border border-slate-200 dark:border-teal-500/20 p-3 transition-all focus-within:ring-2 focus-within:ring-teal-500/40 focus-within:border-teal-500">
+      {/* ── Input Area ───────────────────────────────────────────────────── */}
+      <div
+        style={{
+          padding: '12px 20px 16px',
+          background: cardBg,
+          borderTop: `1px solid ${borderCol}`,
+          flexShrink: 0,
+        }}
+      >
+        <div
+          style={{
+            background: '#f9fafb',
+            border: '1px solid #e5e7eb',
+            borderRadius: '14px',
+            padding: '10px 14px',
+            transition: 'border-color 0.15s, box-shadow 0.15s',
+          }}
+          onFocusCapture={(e) => {
+            e.currentTarget.style.borderColor = '#00897b';
+            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,137,123,0.12)';
+          }}
+          onBlurCapture={(e) => {
+            e.currentTarget.style.borderColor = '#e5e7eb';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+        >
           <textarea
+            ref={textareaRef}
             rows={2}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={isStreaming ? 'MechMind is typing...' : 'Describe the problem or ask a question...'}
+            placeholder={isStreaming ? 'MechMind is typing…' : 'Ask about equipment, procedures, or manuals...'}
             disabled={isStreaming}
-            className="w-full bg-transparent text-sm text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none resize-none"
+            style={{
+              width: '100%',
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              resize: 'none',
+              fontSize: '13.5px',
+              lineHeight: '1.6',
+              color: '#111827',
+              fontFamily: "'Inter', system-ui, sans-serif",
+            }}
           />
 
-          <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-teal-500/20">
-            {/* Bottom left actions */}
-            <div className="flex items-center space-x-2">
-              <button type="button" className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" title="Attach file (coming soon)">
-                <Paperclip className="w-4 h-4" />
-              </button>
-              <button type="button" className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" title="Source link (coming soon)">
-                <LinkIcon className="w-4 h-4" />
-              </button>
-              <button type="button" className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" title="Voice input (coming soon)">
-                <Mic className="w-4 h-4" />
-              </button>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingTop: '8px',
+              borderTop: '1px solid #f0f0f0',
+            }}
+          >
+            {/* Left icons */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+              {[
+                { Icon: Paperclip, title: 'Attach file' },
+                { Icon: LinkIcon, title: 'Add link' },
+                { Icon: Mic, title: 'Voice input' },
+              ].map(({ Icon, title }) => (
+                <button
+                  key={title}
+                  type="button"
+                  title={title}
+                  style={{
+                    width: '30px', height: '30px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    borderRadius: '7px',
+                    border: 'none',
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    color: '#9ca3af',
+                    transition: 'color 0.15s, background 0.15s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#00897b';
+                    e.currentTarget.style.background = 'rgba(0,137,123,0.07)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = '#9ca3af';
+                    e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  <Icon style={{ width: '14px', height: '14px' }} />
+                </button>
+              ))}
             </div>
 
             {/* Send button */}
             <button
               onClick={() => sendMessage()}
               disabled={isStreaming || !input.trim()}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#0D6857] hover:bg-teal-900 transition-all flex items-center space-x-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '7px 16px',
+                borderRadius: '8px',
+                fontSize: '13px',
+                fontWeight: '700',
+                border: 'none',
+                cursor: isStreaming || !input.trim() ? 'not-allowed' : 'pointer',
+                background: isStreaming || !input.trim() ? '#e5e7eb' : '#1e2a5e',
+                color: isStreaming || !input.trim() ? '#9ca3af' : '#ffffff',
+                transition: 'all 0.15s',
+                boxShadow: isStreaming || !input.trim() ? 'none' : '0 2px 6px rgba(30,42,94,0.35)',
+              }}
             >
               <span>Send</span>
-              <Send className="w-3.5 h-3.5" />
+              <Send style={{ width: '13px', height: '13px' }} />
             </button>
           </div>
         </div>

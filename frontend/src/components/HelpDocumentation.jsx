@@ -12,7 +12,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 
-export default function HelpDocumentation({ onBackToDashboard, darkMode }) {
+export default function HelpDocumentation({ onBackToDashboard }) {
   const [docSearch, setDocSearch] = useState('');
   const [activeArticle, setActiveArticle] = useState('Getting Started');
 
@@ -39,9 +39,9 @@ export default function HelpDocumentation({ onBackToDashboard, darkMode }) {
 
   return (
     <div
-      className="flex-1 flex flex-col h-full bg-slate-100/60 dark:bg-[#0a0e27] overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 transition-colors duration-200"
+      className="flex-1 flex flex-col h-full bg-slate-100/60 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 transition-colors duration-200"
       style={{
-        background: darkMode ? 'linear-gradient(#0a0e27, #1a2456)' : '#f8f9fa',
+        background: '#f8fafc',
         padding: '24px',
       }}
     >
@@ -49,24 +49,24 @@ export default function HelpDocumentation({ onBackToDashboard, darkMode }) {
       {/* 1. Page Header Bar & Search Bar */}
       <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+          <h1 className="text-3xl font-bold text-slate-900">
             Help & Documentation
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             Find guides, API references, and troubleshooting resources.
           </p>
         </div>
-        <div className="bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/20 rounded-xl px-4 py-2 text-sm text-slate-700 dark:text-slate-200 w-64 flex items-center justify-between gap-2 shrink-0 shadow-sm">
+        <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 w-64 flex items-center justify-between gap-2 shrink-0 shadow-sm">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <Search className="w-4 h-4 text-slate-400 shrink-0" />
             <input
               value={docSearch}
               onChange={(e) => setDocSearch(e.target.value)}
               placeholder="Search documentation..."
-              className="bg-transparent outline-none text-sm text-slate-700 dark:text-slate-200 placeholder-slate-400 w-full"
+              className="bg-transparent outline-none text-sm text-slate-700 placeholder-slate-400 w-full"
             />
           </div>
-          <span className="bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-300 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded shrink-0">
+          <span className="bg-slate-200 text-slate-500 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded shrink-0">
             ⌘ K
           </span>
         </div>
@@ -76,7 +76,7 @@ export default function HelpDocumentation({ onBackToDashboard, darkMode }) {
       <div className="flex flex-col lg:flex-row gap-6 items-start">
 
         {/* 2. Documentation Navigation Sidebar (~220px width) */}
-        <aside className="w-full lg:w-[220px] shrink-0 bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 rounded-2xl p-4 shadow-sm space-y-5 text-xs font-medium text-slate-600 dark:text-slate-400">
+        <aside className="w-full lg:w-[220px] shrink-0 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-5 text-xs font-medium text-slate-600">
           {navCategories.map((cat, ci) => (
             <div key={cat.header}>
               <span className={`text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2 ${ci > 0 ? 'mt-4' : ''}`}>
@@ -89,7 +89,7 @@ export default function HelpDocumentation({ onBackToDashboard, darkMode }) {
                     <button
                       key={item}
                       onClick={() => setActiveArticle(item)}
-                      className="w-full text-left bg-teal-100/60 dark:bg-teal-500/15 text-teal-900 dark:text-teal-200 font-bold px-3 py-2 rounded-lg flex items-center gap-2"
+                      className="w-full text-left bg-teal-100/60 text-teal-900 font-bold px-3 py-2 rounded-lg flex items-center gap-2"
                     >
                       <BookOpen className="w-3.5 h-3.5 shrink-0" />
                       <span>{item}</span>
@@ -98,7 +98,7 @@ export default function HelpDocumentation({ onBackToDashboard, darkMode }) {
                     <button
                       key={item}
                       onClick={() => setActiveArticle(item)}
-                      className="w-full text-left px-3 py-1.5 hover:text-slate-900 dark:hover:text-slate-100 cursor-pointer transition-colors"
+                      className="w-full text-left px-3 py-1.5 hover:text-slate-900 cursor-pointer transition-colors"
                     >
                       {item}
                     </button>
@@ -110,7 +110,7 @@ export default function HelpDocumentation({ onBackToDashboard, darkMode }) {
         </aside>
 
         {/* 3. Main Reader Article Canvas (Center Column) */}
-        <article className="flex-1 min-w-0 bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+        <article className="flex-1 min-w-0 bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
           {/* Breadcrumb Navigation */}
           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1 mb-3">
             <span>USER GUIDES</span>
@@ -119,7 +119,7 @@ export default function HelpDocumentation({ onBackToDashboard, darkMode }) {
           </div>
 
           {/* Article Header */}
-          <h2 className="text-3xl font-extrabold text-indigo-950 dark:text-slate-100 tracking-tight leading-tight">
+          <h2 className="text-3xl font-extrabold text-indigo-950 tracking-tight leading-tight">
             Getting Started with MechMind AI
           </h2>
           <div className="flex items-center gap-6 mt-4 text-xs text-slate-400 font-medium">
@@ -134,15 +134,15 @@ export default function HelpDocumentation({ onBackToDashboard, darkMode }) {
           </div>
 
           {/* Section 1: Overview */}
-          <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-8 mb-3">
+          <h3 className="text-xl font-bold text-slate-900 mt-8 mb-3">
             Overview
           </h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+          <p className="text-sm text-slate-600 leading-relaxed">
             Welcome to MechMind AI, the premier diagnostic and analytical engine for heavy industry operations. This guide will walk you through the initial setup, ensuring your workspace is optimized for high-speed troubleshooting and data synthesis.
           </p>
 
           {/* Section 2: Video Tutorial Card */}
-          <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-teal-500/20 mt-6 shadow-sm aspect-video bg-slate-900 text-white flex flex-col justify-end p-4">
+          <div className="relative rounded-2xl overflow-hidden border border-slate-200 mt-6 shadow-sm aspect-video bg-slate-900 text-white flex flex-col justify-end p-4">
             {/* Thumbnail backdrop */}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/80 to-slate-800">
               <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:18px_18px] opacity-20"></div>
@@ -166,15 +166,15 @@ export default function HelpDocumentation({ onBackToDashboard, darkMode }) {
         {/* 4. Right Inspector & Actions Panel (~280px width) */}
         <div className="w-full lg:w-[280px] shrink-0">
           {/* Card 1: Article Feedback Widget */}
-          <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 rounded-2xl p-5 text-center space-y-3 shadow-sm">
-            <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 text-center space-y-3 shadow-sm">
+            <h4 className="text-sm font-bold text-slate-900">
               Was this article helpful?
             </h4>
             <div className="flex justify-center gap-3 mt-2">
-              <button className="bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-white/5 border border-slate-200 dark:border-teal-500/20 p-2.5 rounded-xl text-slate-700 dark:text-slate-200 transition-colors">
+              <button className="bg-slate-50 hover:bg-slate-100 border border-slate-200 p-2.5 rounded-xl text-slate-700 transition-colors">
                 <ThumbsUp className="w-4 h-4" />
               </button>
-              <button className="bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-white/5 border border-slate-200 dark:border-teal-500/20 p-2.5 rounded-xl text-slate-700 dark:text-slate-200 transition-colors">
+              <button className="bg-slate-50 hover:bg-slate-100 border border-slate-200 p-2.5 rounded-xl text-slate-700 transition-colors">
                 <ThumbsDown className="w-4 h-4" />
               </button>
             </div>
@@ -196,8 +196,8 @@ export default function HelpDocumentation({ onBackToDashboard, darkMode }) {
           </div>
 
           {/* Card 3: Related Articles */}
-          <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 rounded-2xl p-5 space-y-4 mt-6 shadow-sm">
-            <h4 className="font-bold text-slate-900 dark:text-slate-100 text-base mb-3">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 mt-6 shadow-sm">
+            <h4 className="font-bold text-slate-900 text-base mb-3">
               Related Articles
             </h4>
             <div className="space-y-4">
@@ -205,7 +205,7 @@ export default function HelpDocumentation({ onBackToDashboard, darkMode }) {
                 <button key={a.title} className="w-full text-left flex items-start gap-2.5 group">
                   <FileText className="w-4 h-4 text-slate-400 mt-0.5 shrink-0 group-hover:text-slate-600" />
                   <span>
-                    <span className="block text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white leading-snug">
+                    <span className="block text-xs font-semibold text-slate-800 group-hover:text-slate-900 leading-snug">
                       {a.title}
                     </span>
                     <span className="block text-xs text-slate-400 font-mono mt-0.5">

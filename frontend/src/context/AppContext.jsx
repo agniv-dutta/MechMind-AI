@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
 import { NotificationProvider } from './NotificationContext.jsx';
-import { ThemeProvider } from './ThemeContext.jsx';
 import { ChatProvider } from './ChatContext.jsx';
 
 const AppContext = createContext(null);
@@ -17,13 +16,11 @@ function AppState({ children }) {
 
 export function AppProviders({ children }) {
   return (
-    <ThemeProvider>
-      <NotificationProvider>
-        <ChatProvider>
-          <AppState>{children}</AppState>
-        </ChatProvider>
-      </NotificationProvider>
-    </ThemeProvider>
+    <NotificationProvider>
+      <ChatProvider>
+        <AppState>{children}</AppState>
+      </ChatProvider>
+    </NotificationProvider>
   );
 }
 

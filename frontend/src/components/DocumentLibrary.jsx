@@ -35,33 +35,33 @@ function typeMeta(category, fileType) {
 function StatusBadge({ status }) {
   if (status === 'complete') {
     return (
-      <div className="px-5 pb-5 pt-2 border-t border-slate-100 dark:border-teal-500/10 flex items-center text-xs text-slate-600 dark:text-slate-400">
+      <div className="px-5 pb-5 pt-2 border-t border-slate-100 flex items-center text-xs text-slate-600">
         <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
-        <span className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />Complete</span>
+        <span className="font-medium text-slate-700 flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />Complete</span>
       </div>
     );
   }
   if (status === 'processing') {
     return (
-      <div className="px-5 pb-5 pt-2 border-t border-slate-100 dark:border-teal-500/10 flex items-center text-xs text-slate-600 dark:text-slate-400">
+      <div className="px-5 pb-5 pt-2 border-t border-slate-100 flex items-center text-xs text-slate-600">
         <span className="w-2 h-2 rounded-full bg-blue-500 mr-2 animate-ping"></span>
-        <span className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+        <span className="font-medium text-slate-700 flex items-center gap-1.5">
           <Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin" />Processing...
         </span>
       </div>
     );
   }
   return (
-    <div className="px-5 pb-5 pt-2 border-t border-slate-100 dark:border-teal-500/10 flex items-center text-xs text-slate-600 dark:text-slate-400">
+    <div className="px-5 pb-5 pt-2 border-t border-slate-100 flex items-center text-xs text-slate-600">
       <span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
-      <span className="font-medium text-red-600 dark:text-red-400 flex items-center gap-1.5">
+      <span className="font-medium text-red-600 flex items-center gap-1.5">
         <AlertTriangle className="w-3.5 h-3.5" />Failed
       </span>
     </div>
   );
 }
 
-export default function DocumentLibrary({ onOpenUpload, onSelectDocument, darkMode }) {
+export default function DocumentLibrary({ onOpenUpload, onSelectDocument }) {
   const [viewMode, setViewMode] = useState('grid');
   const [searchVal, setSearchVal] = useState('');
   const [docs, setDocs] = useState(null);
@@ -96,19 +96,19 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument, darkMo
 
   return (
     <div
-      className="flex-1 flex flex-col h-full bg-slate-100/60 dark:bg-[#0a0e27] overflow-y-auto p-6 md:p-8 transition-colors duration-200"
+      className="flex-1 flex flex-col h-full bg-slate-100/60 overflow-y-auto p-6 md:p-8 transition-colors duration-200"
       style={{
-        background: darkMode ? 'linear-gradient(#0a0e27, #1a2456)' : '#f8f9fa',
+        background: '#f8fafc',
         padding: '24px',
       }}
     >
       
       {/* 1. Page Header & Subtitle */}
       <div className="space-y-1">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+        <h1 className="text-3xl font-bold text-slate-900">
           Technical Documentation Library
         </h1>
-        <p className="text-sm text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
+        <p className="text-sm text-slate-600 max-w-3xl leading-relaxed">
           Central repository for technical schematics, maintenance manuals, and diagnostic reports. All documents are automatically indexed by MechMind AI.
         </p>
       </div>
@@ -126,22 +126,22 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument, darkMo
             value={searchVal}
             onChange={(e) => setSearchVal(e.target.value)}
             placeholder="Search by filename, equipment, or tags..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 shadow-2xs"
+            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-white border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 shadow-2xs"
           />
         </div>
 
         {/* Filter & Sort & Actions */}
         <div className="flex flex-wrap items-center gap-3">
-          <button className="bg-white dark:bg-[#0f172a] hover:bg-slate-100 dark:hover:bg-white/5 border border-slate-200 dark:border-teal-500/10 rounded-lg px-4 py-2 text-sm text-slate-700 dark:text-slate-300 font-medium flex items-center gap-2 shadow-2xs transition-colors">
+          <button className="bg-white hover:bg-slate-100 border border-slate-200 rounded-lg px-4 py-2 text-sm text-slate-700 font-medium flex items-center gap-2 shadow-2xs transition-colors">
             <Filter className="w-4 h-4 text-slate-500" />
             <span>Filter</span>
           </button>
 
-          <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 rounded-lg p-1 flex items-center gap-1 shadow-2xs">
+          <div className="bg-white border border-slate-200 rounded-lg p-1 flex items-center gap-1 shadow-2xs">
             <button
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-md transition-colors ${
-                viewMode === 'grid' ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100' : 'text-slate-400 hover:text-slate-600'
+                viewMode === 'grid' ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-600'
               }`}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -149,7 +149,7 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument, darkMo
             <button
               onClick={() => setViewMode('list')}
               className={`p-1.5 rounded-md transition-colors ${
-                viewMode === 'list' ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100' : 'text-slate-400 hover:text-slate-600'
+                viewMode === 'list' ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-600'
               }`}
             >
               <List className="w-4 h-4" />
@@ -169,20 +169,20 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument, darkMo
 
       {docs === null ? (
         <div className="flex-1 flex items-center justify-center">
-          <div className="flex items-center space-x-2 text-sm text-slate-500 dark:text-slate-400">
+          <div className="flex items-center space-x-2 text-sm text-slate-500">
             <Loader2 className="w-4 h-4 animate-spin text-teal-500" />
             <span>Loading documents...</span>
           </div>
         </div>
       ) : error ? (
-        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-sm font-semibold text-red-700 dark:text-red-300 flex items-center space-x-2">
+        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-sm font-semibold text-red-700 flex items-center space-x-2">
           <AlertTriangle className="w-4 h-4" />
           <span>{error}</span>
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-3">
-          <FileText className="w-10 h-10 text-slate-300 dark:text-slate-600" />
-          <p className="text-sm text-slate-500 dark:text-slate-400">No documents found.</p>
+          <FileText className="w-10 h-10 text-slate-300" />
+          <p className="text-sm text-slate-500">No documents found.</p>
         </div>
       ) : viewMode === 'list' ? (
         <div className="space-y-3">
@@ -190,22 +190,22 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument, darkMo
             <button
               key={d.id}
               onClick={() => onSelectDocument && onSelectDocument(d.id)}
-              className="w-full bg-white dark:bg-[#0f172a] rounded-xl border border-slate-200 dark:border-teal-500/10 p-4 flex items-center justify-between hover:shadow-md hover:border-teal-500/40 transition-all text-left"
+              className="w-full bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between hover:shadow-md hover:border-teal-500/40 transition-all text-left"
             >
               <div className="flex items-center space-x-3 min-w-0">
-                <div className="w-9 h-9 rounded-lg bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-lg bg-blue-500/15 text-blue-600 flex items-center justify-center shrink-0">
                   <FileText className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{d.filename}</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                  <p className="text-sm font-bold text-slate-900 truncate">{d.filename}</p>
+                  <p className="text-[11px] text-slate-500 font-mono">
                     {d.equipment_type || '—'} • {d.pages_count || 0} pages • {formatDate(d.uploaded_at)}
                   </p>
                 </div>
               </div>
               <div className="flex items-center space-x-3 shrink-0">
-                <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase">{d.category || (d.file_type || '').toUpperCase()}</span>
-                <span className="flex items-center text-[11px] font-mono text-slate-500 dark:text-slate-400">{d.chunks_count || 0} chunks</span>
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-600 uppercase">{d.category || (d.file_type || '').toUpperCase()}</span>
+                <span className="flex items-center text-[11px] font-mono text-slate-500">{d.chunks_count || 0} chunks</span>
                 <span className={`w-2 h-2 rounded-full ${d.status === 'complete' ? 'bg-emerald-500' : d.status === 'processing' ? 'bg-blue-500 animate-ping' : 'bg-red-500'}`}></span>
               </div>
             </button>
@@ -219,7 +219,7 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument, darkMo
               <div
                 key={d.id}
                 onClick={() => onSelectDocument && onSelectDocument(d.id)}
-                className="bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-teal-500/10 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between cursor-pointer group"
+                className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between cursor-pointer group"
               >
                 <div>
                   <div className={`h-36 bg-gradient-to-tr ${meta.bg} p-4 relative overflow-hidden flex items-center justify-center border-b border-slate-800`}>
@@ -234,15 +234,15 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument, darkMo
 
                   <div className="p-5 space-y-2">
                     <div className="flex items-start justify-between">
-                      <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base leading-snug group-hover:text-teal-600 dark:group-hover:text-teal-300 transition-colors">
+                      <h3 className="font-bold text-slate-900 text-base leading-snug group-hover:text-teal-600 transition-colors">
                         {d.filename}
                       </h3>
-                      <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1" onClick={(e) => e.stopPropagation()}>
+                      <button className="text-slate-400 hover:text-slate-600 p-1" onClick={(e) => e.stopPropagation()}>
                         <MoreVertical className="w-4 h-4" />
                       </button>
                     </div>
 
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-slate-500">
                       {formatDate(d.uploaded_at)} • {d.pages_count || 0} pages
                     </p>
 
@@ -253,12 +253,12 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument, darkMo
                         </span>
                       )}
                       {d.category && (
-                        <span className="px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-red-500/15 text-red-700 dark:text-red-300 border border-red-500/20">
+                        <span className="px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-red-500/15 text-red-700 border border-red-500/20">
                           {d.category}
                         </span>
                       )}
                       {(d.tags || []).slice(0, 2).map((t) => (
-                        <span key={t} className="px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-teal-500/15 text-teal-700 dark:text-teal-300 border border-teal-500/20">
+                        <span key={t} className="px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-teal-500/15 text-teal-700 border border-teal-500/20">
                           {t}
                         </span>
                       ))}
@@ -273,15 +273,15 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument, darkMo
 
           <div
             onClick={onOpenUpload}
-            className="border-2 border-dashed border-slate-300 dark:border-teal-500/20 rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/60 hover:border-teal-500 transition-all h-full min-h-[260px] group"
+            className="border-2 border-dashed border-slate-300 rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50 hover:border-teal-500 transition-all h-full min-h-[260px] group"
           >
-            <div className="w-14 h-14 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-14 h-14 rounded-full bg-teal-500/10 text-teal-600 flex items-center justify-center group-hover:scale-110 transition-transform">
               <Plus className="w-7 h-7 stroke-[2.5]" />
             </div>
-            <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base mt-4">
+            <h3 className="font-bold text-slate-900 text-base mt-4">
               Drop New Document
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-[200px] leading-relaxed">
+            <p className="text-xs text-slate-500 mt-1 max-w-[200px] leading-relaxed">
               PDF, DOCX, or Image formats
             </p>
           </div>

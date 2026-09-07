@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import TopBar from './components/TopBar';
 import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
@@ -22,7 +22,6 @@ import { ErrorBoundary } from './components/common/ErrorBoundary.jsx';
 import { NotificationProvider } from './context/NotificationContext.jsx';
 
 export default function App() {
-  const [darkMode, setDarkMode] = useState(false); // Default to light mode
   const [activeNav, setActiveNav] = useState('landing'); // Landing page is the public entry; Login/Trial enters the dashboard
   const [searchQuery, setSearchQuery] = useState('');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -34,15 +33,6 @@ export default function App() {
   const [libraryRefreshKey, setLibraryRefreshKey] = useState(0);
   const [chatPreload, setChatPreload] = useState(null);
   const chatSeqRef = useRef(0);
-
-  // Handle Dark mode toggle class on document.documentElement
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
 
   const handleNavigateSettings = (settingsId) => {
     setActiveNav(settingsId);
@@ -86,11 +76,9 @@ export default function App() {
 
   return (
     <NotificationProvider>
-    <div className="min-h-screen h-screen flex flex-col bg-slate-50 dark:bg-[#0a0e27] text-slate-900 dark:text-slate-100 overflow-hidden font-sans transition-colors duration-200" style={{ backgroundColor: darkMode ? '#0a0e27' : '#f8f9fa' }}>
+    <div className="min-h-screen h-screen flex flex-col bg-slate-50 text-slate-900 overflow-hidden font-sans transition-colors duration-200" style={{ backgroundColor: '#f8fafc' }}>
       {/* Top Header Bar */}
       <TopBar 
-        darkMode={darkMode} 
-        setDarkMode={setDarkMode}
         searchQuery={searchQuery}
         setSearchQuery={(q) => {
           setSearchQuery(q);
@@ -106,49 +94,41 @@ export default function App() {
         <Sidebar 
           activeNav={activeNav === 'doc_details' ? 'documents' : activeNav === 'adv_search' ? 'search' : activeNav === 'ai' || activeNav === 'search_settings' || activeNav === 'data' || activeNav === 'settings' ? 'settings' : activeNav} 
           setActiveNav={navToPage}
-          darkMode={darkMode}
         />
 
         {/* Dynamic Page Views */}
         {activeNav === 'help' ? (
           <HelpDocumentation
             onBackToDashboard={() => setActiveNav('chat')}
-            darkMode={darkMode}
           />
         ) : activeNav === 'data' ? (
           <DataPrivacy
             onBackToDashboard={() => setActiveNav('chat')}
             onNavigateSettings={handleNavigateSettings}
-            darkMode={darkMode}
           />
         ) : activeNav === 'search_settings' ? (
           <SearchSettings 
             onBackToDashboard={() => setActiveNav('chat')}
             onNavigateSettings={handleNavigateSettings}
-            darkMode={darkMode}
           />
         ) : activeNav === 'ai' ? (
           <AIConfiguration 
             onBackToDashboard={() => setActiveNav('chat')}
             onNavigateSettings={handleNavigateSettings}
-            darkMode={darkMode}
           />
         ) : activeNav === 'settings' ? (
           <GeneralSettings 
             onBackToDashboard={() => setActiveNav('chat')}
             onNavigateSettings={handleNavigateSettings}
-            darkMode={darkMode}
-            setDarkMode={setDarkMode}
           />
         ) : activeNav === 'adv_search' ? (
           <AdvancedSearch 
             initialQuery={searchQuery}
             onUseInChat={useQueryInChat}
             onViewDoc={viewDocument}
-            darkMode={darkMode}
           />
         ) : activeNav === 'knowledge' ? (
-          <KnowledgeGraph darkMode={darkMode} />
+          <KnowledgeGraph />
         ) : activeNav === 'doc_details' ? (
           <DocumentDetails 
             documentId={selectedDocId}
@@ -158,7 +138,6 @@ export default function App() {
               setSelectedDocId(null);
               setActiveNav('documents');
             }}
-            darkMode={darkMode}
           />
         ) : activeNav === 'documents' ? (
           <DocumentLibrary 
@@ -168,18 +147,16 @@ export default function App() {
               if (docId) setSelectedDocId(docId);
               setActiveNav('doc_details');
             }}
-            darkMode={darkMode}
           />
         ) : activeNav === 'search' ? (
           <SearchResults 
             query={searchQuery}
             onUseInChat={useQueryInChat}
             onViewDoc={viewDocument}
-            darkMode={darkMode}
           />
         ) : activeNav === 'field_page' ? (
           <ErrorBoundary>
-            <FieldAssistancePage darkMode={darkMode} />
+            <FieldAssistancePage />
           </ErrorBoundary>
         ) : (
           <>
@@ -191,7 +168,6 @@ export default function App() {
               onCitationClick={handleCitationClick}
               onSourcesChange={setChatSources}
               onStreamingChange={setIsStreaming}
-              darkMode={darkMode}
             />
 
             {/* Right Context/Sources Inspector */}
@@ -200,7 +176,6 @@ export default function App() {
               isStreaming={isStreaming}
               activeCitation={activeCitation}
               onCitationClick={handleCitationClick}
-              darkMode={darkMode}
             />
           </>
         )}

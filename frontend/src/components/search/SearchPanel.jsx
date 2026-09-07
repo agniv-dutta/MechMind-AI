@@ -30,7 +30,7 @@ export function SearchPanel({ onSearch, loading = false }) {
   return (
     <div className="space-y-3">
       <div className="flex gap-2">
-        <div className="flex-1 flex items-center px-4 py-2.5 bg-white dark:bg-[#0f172a] border border-slate-300 dark:border-teal-500/20 rounded-xl focus-within:border-teal-500">
+        <div className="flex-1 flex items-center px-4 py-2.5 bg-white border border-slate-300 rounded-xl focus-within:border-teal-500">
           <Search className="w-4 h-4 text-slate-400" />
           <input
             value={query}
@@ -54,7 +54,7 @@ export function SearchPanel({ onSearch, loading = false }) {
         </button>
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className={`p-2.5 rounded-xl border transition-colors ${showFilters ? 'bg-teal-50 text-teal-700 border-teal-300' : 'bg-white dark:bg-[#0f172a] text-slate-500 border-slate-200 dark:border-teal-500/20'}`}
+          className={`p-2.5 rounded-xl border transition-colors ${showFilters ? 'bg-teal-50 text-teal-700 border-teal-300' : 'bg-white text-slate-500 border-slate-200'}`}
           aria-label="Toggle filters"
         >
           <Filter className="w-4 h-4" />
@@ -64,7 +64,7 @@ export function SearchPanel({ onSearch, loading = false }) {
       {activePills.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {activePills.map((p) => (
-            <span key={p} className="text-[10px] font-mono font-bold px-2 py-1 rounded-full bg-slate-900 text-teal-300 dark:bg-teal-500/15">
+            <span key={p} className="text-[10px] font-mono font-bold px-2 py-1 rounded-full bg-slate-900 text-teal-300">
               {p}
             </span>
           ))}
@@ -72,7 +72,7 @@ export function SearchPanel({ onSearch, loading = false }) {
       )}
 
       {showFilters && (
-        <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 rounded-2xl p-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
           <div>
             <p className="font-bold text-slate-500 uppercase tracking-wider text-[10px] mb-2">Equipment Class</p>
             <div className="space-y-1.5">

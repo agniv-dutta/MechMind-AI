@@ -75,10 +75,10 @@ export function KnowledgeGraphView({ nodes = [], edges = [], onNodeClick, onExpo
   return (
     <div className="space-y-3">
       <div className="flex gap-2">
-        <button onClick={() => setScale((s) => Math.min(s + 0.15, 2.5))} className="p-2 bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/20 rounded-xl" aria-label="Zoom in">
+        <button onClick={() => setScale((s) => Math.min(s + 0.15, 2.5))} className="p-2 bg-white border border-slate-200 rounded-xl" aria-label="Zoom in">
           <ZoomIn className="w-4 h-4" />
         </button>
-        <button onClick={() => setScale((s) => Math.max(s - 0.15, 0.5))} className="p-2 bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/20 rounded-xl" aria-label="Zoom out">
+        <button onClick={() => setScale((s) => Math.max(s - 0.15, 0.5))} className="p-2 bg-white border border-slate-200 rounded-xl" aria-label="Zoom out">
           <ZoomOut className="w-4 h-4" />
         </button>
         <button onClick={() => onExport?.()} className="ml-auto px-4 py-2 rounded-xl bg-teal-600 text-white text-xs font-bold hover:bg-teal-700 flex items-center gap-1.5">
@@ -86,7 +86,7 @@ export function KnowledgeGraphView({ nodes = [], edges = [], onNodeClick, onExpo
         </button>
       </div>
       <canvas ref={canvasRef} width={1100} height={560} className="w-full rounded-2xl border border-slate-800 cursor-pointer" />
-      <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 rounded-2xl p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl p-4">
         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Legend</p>
         <div className="flex flex-wrap gap-3 text-xs">
           {Object.entries(ENTITY_COLORS).map(([t, c]) => (

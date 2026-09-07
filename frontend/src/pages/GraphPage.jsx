@@ -27,7 +27,7 @@ export function GraphPage() {
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && runQuery()}
           placeholder="Search entities… (e.g. Centrifugal Pump)"
-          className="flex-1 px-4 py-2.5 text-sm rounded-xl border border-slate-300 dark:border-teal-500/20 bg-white dark:bg-[#0f172a]"
+          className="flex-1 px-4 py-2.5 text-sm rounded-xl border border-slate-300 bg-white"
         />
         <button onClick={runQuery} disabled={loading} className="px-5 py-2 rounded-xl bg-teal-600 text-white text-xs font-bold disabled:opacity-60">
           {loading ? 'Querying…' : 'Query Graph'}
