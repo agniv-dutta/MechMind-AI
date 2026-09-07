@@ -35,7 +35,7 @@ function typeMeta(category, fileType) {
 function StatusBadge({ status }) {
   if (status === 'complete') {
     return (
-      <div className="px-5 pb-5 pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center text-xs text-slate-600 dark:text-slate-400">
+      <div className="px-5 pb-5 pt-2 border-t border-slate-100 dark:border-teal-500/10 flex items-center text-xs text-slate-600 dark:text-slate-400">
         <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
         <span className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />Complete</span>
       </div>
@@ -43,7 +43,7 @@ function StatusBadge({ status }) {
   }
   if (status === 'processing') {
     return (
-      <div className="px-5 pb-5 pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center text-xs text-slate-600 dark:text-slate-400">
+      <div className="px-5 pb-5 pt-2 border-t border-slate-100 dark:border-teal-500/10 flex items-center text-xs text-slate-600 dark:text-slate-400">
         <span className="w-2 h-2 rounded-full bg-blue-500 mr-2 animate-ping"></span>
         <span className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
           <Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin" />Processing...
@@ -52,7 +52,7 @@ function StatusBadge({ status }) {
     );
   }
   return (
-    <div className="px-5 pb-5 pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center text-xs text-slate-600 dark:text-slate-400">
+    <div className="px-5 pb-5 pt-2 border-t border-slate-100 dark:border-teal-500/10 flex items-center text-xs text-slate-600 dark:text-slate-400">
       <span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
       <span className="font-medium text-red-600 dark:text-red-400 flex items-center gap-1.5">
         <AlertTriangle className="w-3.5 h-3.5" />Failed
@@ -61,7 +61,7 @@ function StatusBadge({ status }) {
   );
 }
 
-export default function DocumentLibrary({ onOpenUpload, onSelectDocument }) {
+export default function DocumentLibrary({ onOpenUpload, onSelectDocument, darkMode }) {
   const [viewMode, setViewMode] = useState('grid');
   const [searchVal, setSearchVal] = useState('');
   const [docs, setDocs] = useState(null);
@@ -95,7 +95,13 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument }) {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-100/60 dark:bg-slate-950 overflow-y-auto p-6 md:p-8 transition-colors duration-200">
+    <div
+      className="flex-1 flex flex-col h-full bg-slate-100/60 dark:bg-[#0a0e27] overflow-y-auto p-6 md:p-8 transition-colors duration-200"
+      style={{
+        background: darkMode ? 'linear-gradient(#0a0e27, #1a2456)' : '#f8f9fa',
+        padding: '24px',
+      }}
+    >
       
       {/* 1. Page Header & Subtitle */}
       <div className="space-y-1">
@@ -120,18 +126,18 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument }) {
             value={searchVal}
             onChange={(e) => setSearchVal(e.target.value)}
             placeholder="Search by filename, equipment, or tags..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 shadow-2xs"
+            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 shadow-2xs"
           />
         </div>
 
         {/* Filter & Sort & Actions */}
         <div className="flex flex-wrap items-center gap-3">
-          <button className="bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2 text-sm text-slate-700 dark:text-slate-300 font-medium flex items-center gap-2 shadow-2xs transition-colors">
+          <button className="bg-white dark:bg-[#0f172a] hover:bg-slate-100 dark:hover:bg-white/5 border border-slate-200 dark:border-teal-500/10 rounded-lg px-4 py-2 text-sm text-slate-700 dark:text-slate-300 font-medium flex items-center gap-2 shadow-2xs transition-colors">
             <Filter className="w-4 h-4 text-slate-500" />
             <span>Filter</span>
           </button>
 
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-1 flex items-center gap-1 shadow-2xs">
+          <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 rounded-lg p-1 flex items-center gap-1 shadow-2xs">
             <button
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-md transition-colors ${
@@ -184,7 +190,7 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument }) {
             <button
               key={d.id}
               onClick={() => onSelectDocument && onSelectDocument(d.id)}
-              className="w-full bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between hover:shadow-md hover:border-teal-500/40 transition-all text-left"
+              className="w-full bg-white dark:bg-[#0f172a] rounded-xl border border-slate-200 dark:border-teal-500/10 p-4 flex items-center justify-between hover:shadow-md hover:border-teal-500/40 transition-all text-left"
             >
               <div className="flex items-center space-x-3 min-w-0">
                 <div className="w-9 h-9 rounded-lg bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -213,7 +219,7 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument }) {
               <div
                 key={d.id}
                 onClick={() => onSelectDocument && onSelectDocument(d.id)}
-                className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between cursor-pointer group"
+                className="bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-teal-500/10 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between cursor-pointer group"
               >
                 <div>
                   <div className={`h-36 bg-gradient-to-tr ${meta.bg} p-4 relative overflow-hidden flex items-center justify-center border-b border-slate-800`}>
@@ -267,7 +273,7 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument }) {
 
           <div
             onClick={onOpenUpload}
-            className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/60 hover:border-teal-500 transition-all h-full min-h-[260px] group"
+            className="border-2 border-dashed border-slate-300 dark:border-teal-500/20 rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/60 hover:border-teal-500 transition-all h-full min-h-[260px] group"
           >
             <div className="w-14 h-14 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center group-hover:scale-110 transition-transform">
               <Plus className="w-7 h-7 stroke-[2.5]" />

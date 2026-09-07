@@ -15,10 +15,15 @@ import AIConfiguration from './components/AIConfiguration';
 import SearchSettings from './components/SearchSettings';
 import DataPrivacy from './components/DataPrivacy';
 import HelpDocumentation from './components/HelpDocumentation';
+import LandingPage from './pages/LandingPage.jsx';
+import FieldAssistancePage from './pages/FieldAssistancePage.jsx';
+import Toasts from './components/common/Toast.jsx';
+import { ErrorBoundary } from './components/common/ErrorBoundary.jsx';
+import { NotificationProvider } from './context/NotificationContext.jsx';
 
 export default function App() {
-  const [darkMode, setDarkMode] = useState(true);
-  const [activeNav, setActiveNav] = useState('chat');
+  const [darkMode, setDarkMode] = useState(false); // Default to light mode
+  const [activeNav, setActiveNav] = useState('landing'); // Landing page is the public entry; Login/Trial enters the dashboard
   const [searchQuery, setSearchQuery] = useState('');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isWizardModalOpen, setIsWizardModalOpen] = useState(false);
@@ -69,8 +74,19 @@ export default function App() {
     else setActiveNav(id);
   };
 
+  // Standalone marketing landing page (per landing_page_implementation.md)
+  if (activeNav === 'landing') {
+    return (
+      <NotificationProvider>
+        <LandingPage onEnter={() => setActiveNav('chat')} />
+        <Toasts />
+      </NotificationProvider>
+    );
+  }
+
   return (
-    <div className="min-h-screen h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden font-sans transition-colors duration-200">
+    <NotificationProvider>
+    <div className="min-h-screen h-screen flex flex-col bg-slate-50 dark:bg-[#0a0e27] text-slate-900 dark:text-slate-100 overflow-hidden font-sans transition-colors duration-200" style={{ backgroundColor: darkMode ? '#0a0e27' : '#f8f9fa' }}>
       {/* Top Header Bar */}
       <TopBar 
         darkMode={darkMode} 
@@ -90,27 +106,32 @@ export default function App() {
         <Sidebar 
           activeNav={activeNav === 'doc_details' ? 'documents' : activeNav === 'adv_search' ? 'search' : activeNav === 'ai' || activeNav === 'search_settings' || activeNav === 'data' || activeNav === 'settings' ? 'settings' : activeNav} 
           setActiveNav={navToPage}
+          darkMode={darkMode}
         />
 
         {/* Dynamic Page Views */}
         {activeNav === 'help' ? (
           <HelpDocumentation
             onBackToDashboard={() => setActiveNav('chat')}
+            darkMode={darkMode}
           />
         ) : activeNav === 'data' ? (
           <DataPrivacy
             onBackToDashboard={() => setActiveNav('chat')}
             onNavigateSettings={handleNavigateSettings}
+            darkMode={darkMode}
           />
         ) : activeNav === 'search_settings' ? (
           <SearchSettings 
             onBackToDashboard={() => setActiveNav('chat')}
             onNavigateSettings={handleNavigateSettings}
+            darkMode={darkMode}
           />
         ) : activeNav === 'ai' ? (
           <AIConfiguration 
             onBackToDashboard={() => setActiveNav('chat')}
             onNavigateSettings={handleNavigateSettings}
+            darkMode={darkMode}
           />
         ) : activeNav === 'settings' ? (
           <GeneralSettings 
@@ -124,9 +145,10 @@ export default function App() {
             initialQuery={searchQuery}
             onUseInChat={useQueryInChat}
             onViewDoc={viewDocument}
+            darkMode={darkMode}
           />
         ) : activeNav === 'knowledge' ? (
-          <KnowledgeGraph />
+          <KnowledgeGraph darkMode={darkMode} />
         ) : activeNav === 'doc_details' ? (
           <DocumentDetails 
             documentId={selectedDocId}
@@ -136,6 +158,7 @@ export default function App() {
               setSelectedDocId(null);
               setActiveNav('documents');
             }}
+            darkMode={darkMode}
           />
         ) : activeNav === 'documents' ? (
           <DocumentLibrary 
@@ -145,13 +168,19 @@ export default function App() {
               if (docId) setSelectedDocId(docId);
               setActiveNav('doc_details');
             }}
+            darkMode={darkMode}
           />
         ) : activeNav === 'search' ? (
           <SearchResults 
             query={searchQuery}
             onUseInChat={useQueryInChat}
             onViewDoc={viewDocument}
+            darkMode={darkMode}
           />
+        ) : activeNav === 'field_page' ? (
+          <ErrorBoundary>
+            <FieldAssistancePage darkMode={darkMode} />
+          </ErrorBoundary>
         ) : (
           <>
             {/* Central Chat Area */}
@@ -162,6 +191,7 @@ export default function App() {
               onCitationClick={handleCitationClick}
               onSourcesChange={setChatSources}
               onStreamingChange={setIsStreaming}
+              darkMode={darkMode}
             />
 
             {/* Right Context/Sources Inspector */}
@@ -170,6 +200,7 @@ export default function App() {
               isStreaming={isStreaming}
               activeCitation={activeCitation}
               onCitationClick={handleCitationClick}
+              darkMode={darkMode}
             />
           </>
         )}
@@ -187,6 +218,9 @@ export default function App() {
         isOpen={isWizardModalOpen}
         onClose={() => setIsWizardModalOpen(false)}
       />
+
+      <Toasts />
     </div>
+    </NotificationProvider>
   );
 }

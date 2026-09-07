@@ -26,7 +26,7 @@ const TYPE_ICONS = {
   Procedure: Cpu,
 };
 
-export default function DocumentDetails({ documentId, onBack, onDelete }) {
+export default function DocumentDetails({ documentId, onBack, onDelete, darkMode }) {
   const [activeTab, setActiveTab] = useState('entities');
   const [activePage, setActivePage] = useState(1);
   const [zoomLevel, setZoomLevel] = useState(100);
@@ -88,7 +88,7 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
       <div className="flex-1 flex flex-col items-center justify-center bg-slate-100/60 dark:bg-slate-950 space-y-4 p-6 text-center">
         <AlertTriangle className="w-10 h-10 text-red-400" />
         <p className="text-sm font-semibold text-red-700 dark:text-red-300">{error}</p>
-        <button onClick={onBack} className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">Back to Library</button>
+        <button onClick={onBack} className="px-4 py-2 rounded-lg border border-slate-300 dark:border-teal-500/20 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5">Back to Library</button>
       </div>
     );
   }
@@ -113,13 +113,19 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
   const iconFor = (type) => TYPE_ICONS[type] || Shield;
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-100/60 dark:bg-slate-950 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 transition-colors duration-200">
+    <div
+      className="flex-1 flex flex-col h-full bg-slate-100/60 dark:bg-[#0a0e27] overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 transition-colors duration-200"
+      style={{
+        background: darkMode ? 'linear-gradient(#0a0e27, #1a2456)' : '#f8f9fa',
+        padding: '24px',
+      }}
+    >
             {/* 1. Page Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#0f172a] p-5 rounded-2xl border border-slate-200 dark:border-teal-500/10 shadow-2xs">
               <div className="flex items-center space-x-4">
                 <button
                   onClick={onBack}
-                  className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
+                  className="p-2 rounded-xl border border-slate-200 dark:border-teal-500/20 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 transition-colors"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </button>
@@ -156,7 +162,7 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
             {/* Main layout */}
             <div className="flex flex-col lg:flex-row gap-6">
               {/* Left viewer */}
-              <div className="flex-1 bg-white dark:bg-slate-900 rounded-2xl p-4 relative min-h-[600px] flex flex-col justify-between border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs">
+              <div className="flex-1 bg-white dark:bg-[#0f172a] rounded-2xl p-4 relative min-h-[600px] flex flex-col justify-between border border-slate-200 dark:border-teal-500/10 overflow-hidden shadow-2xs">
                 <div className="flex items-center justify-between z-10">
                   <span className="px-3 py-1 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-300 border border-teal-500/20 text-xs font-bold flex items-center gap-1.5 shadow-2xs">
                     <span className="w-2 h-2 rounded-full bg-teal-500"></span>
@@ -169,7 +175,7 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
 
                 <div className="my-6 flex-1 flex items-center justify-center relative">
                   <div
-                    className="w-full max-w-xl aspect-[3/4] bg-slate-50 dark:bg-slate-950 rounded-xl shadow-2xl p-8 border border-slate-200 dark:border-slate-800 relative overflow-y-auto"
+                    className="w-full max-w-xl aspect-[3/4] bg-slate-50 dark:bg-slate-950 rounded-xl shadow-2xl p-8 border border-slate-200 dark:border-teal-500/10 relative overflow-y-auto"
                     style={{ transform: `scale(${zoomLevel / 100})` }}
                   >
                     {pageLoading ? (
@@ -194,19 +200,19 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
                   </div>
                 </div>
 
-                <div className="absolute bottom-20 right-6 flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1 shadow-lg z-10 space-y-1">
-                  <button onClick={() => setZoomLevel(prev => Math.min(prev + 10, 140))} className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                <div className="absolute bottom-20 right-6 flex flex-col bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 rounded-xl p-1 shadow-lg z-10 space-y-1">
+                  <button onClick={() => setZoomLevel(prev => Math.min(prev + 10, 140))} className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg">
                     <ZoomIn className="w-4 h-4" />
                   </button>
-                  <button onClick={() => setZoomLevel(prev => Math.max(prev - 10, 70))} className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                  <button onClick={() => setZoomLevel(prev => Math.max(prev - 10, 70))} className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg">
                     <ZoomOut className="w-4 h-4" />
                   </button>
-                  <button onClick={() => setZoomLevel(100)} className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                  <button onClick={() => setZoomLevel(100)} className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg">
                     <Maximize2 className="w-4 h-4" />
                   </button>
                 </div>
 
-                <div className="flex items-center justify-center gap-3 overflow-x-auto p-2 bg-slate-50 dark:bg-slate-900/70 rounded-xl border border-slate-200/80 dark:border-slate-800 z-10">
+                <div className="flex items-center justify-center gap-3 overflow-x-auto p-2 bg-slate-50 dark:bg-[#0f172a]/70 rounded-xl border border-slate-200/80 dark:border-teal-500/10 z-10">
                   {Array.from({ length: pageCount }).slice(0, 12).map((_, i) => {
                     const pg = i + 1;
                     return (
@@ -216,7 +222,7 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
                         className={`relative w-12 h-16 rounded-lg border-2 flex items-center justify-center font-mono text-xs transition-all ${
                           activePage === pg
                             ? 'border-teal-500 bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400 shadow-sm font-bold'
-                            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-500'
+                            : 'border-slate-200 dark:border-teal-500/20 bg-white dark:bg-[#0f172a] text-slate-500'
                         }`}
                       >
                         <span className="absolute top-1 left-1.5 text-[9px] font-bold">{pg}</span>
@@ -229,21 +235,21 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
 
               {/* Right panel */}
               <div className="w-full lg:w-[360px] space-y-4 shrink-0">
-                <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs space-y-4">
+                <div className="p-5 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 shadow-2xs space-y-4">
                   <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base">Extraction Summary</h3>
                   <div className="grid grid-cols-2 gap-3 pt-1">
-                    <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl text-center border border-slate-200/60 dark:border-slate-700/60">
+                    <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl text-center border border-slate-200/60 dark:border-teal-500/20">
                       <span className="text-2xl font-bold text-slate-900 dark:text-slate-100 font-mono">{entities.length}</span>
                       <span className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-1">ENTITY ITEMS</span>
                     </div>
-                    <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl text-center border border-slate-200/60 dark:border-slate-700/60">
+                    <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl text-center border border-slate-200/60 dark:border-teal-500/20">
                       <span className="text-2xl font-bold text-teal-700 dark:text-teal-400 font-mono">{relationships.length}</span>
                       <span className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-1">RELATIONSHIPS</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs space-y-3">
+                <div className="p-5 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 shadow-2xs space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base">Metadata</h3>
                   </div>
@@ -266,7 +272,7 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
                     </div>
                   </div>
                   {(tags.length > 0) && (
-                    <div className="pt-2 space-y-1.5 border-t border-slate-100 dark:border-slate-800">
+                    <div className="pt-2 space-y-1.5 border-t border-slate-100 dark:border-teal-500/10">
                       <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">TAGS</span>
                       <div className="flex flex-wrap items-center gap-1.5">
                         {tags.map((t) => (
@@ -277,12 +283,12 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
                   )}
                 </div>
 
-                <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs space-y-3">
+                <div className="p-5 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 shadow-2xs space-y-3">
                   <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base flex items-center gap-2">
                     <Waypoints className="w-4 h-4 text-teal-500" />
                     Extracted Knowledge Entities
                   </h3>
-                  <div className="flex border-b border-slate-200 dark:border-slate-800 text-xs font-bold">
+                  <div className="flex border-b border-slate-200 dark:border-teal-500/10 text-xs font-bold">
                     {['entities', 'relationships', 'preview'].map((t) => (
                       <button
                         key={t}
@@ -304,7 +310,7 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
                       {entities.map((item, idx) => {
                         const Icon = iconFor(item.type);
                         return (
-                          <div key={idx} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 flex items-center space-x-3 shadow-2xs hover:border-teal-500/50 transition-colors">
+                          <div key={idx} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-teal-500/20 flex items-center space-x-3 shadow-2xs hover:border-teal-500/50 transition-colors">
                             <div className="w-8 h-8 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-300 flex items-center justify-center shrink-0">
                               <Icon className="w-4 h-4" />
                             </div>
@@ -324,7 +330,7 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
                     <div className="space-y-2 pt-1">
                       {relationships.length === 0 && <p className="text-xs text-slate-400">No relationships extracted.</p>}
                       {relationships.map((r, idx) => (
-                        <div key={idx} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 text-xs">
+                        <div key={idx} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-teal-500/20 text-xs">
                           <span className="font-bold text-slate-900 dark:text-slate-100">{r.source}</span>
                           <span className="mx-2 px-1.5 py-0.5 rounded bg-teal-500/10 text-teal-600 dark:text-teal-300 font-mono text-[10px]">{r.type}</span>
                           <span className="font-bold text-slate-900 dark:text-slate-100">{r.target}</span>
@@ -336,7 +342,7 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
                   {activeTab === 'preview' && (
                     <div className="pt-1">
                       {doc.content_preview ? (
-                        <pre className="whitespace-pre-wrap text-[11px] leading-relaxed text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 rounded-xl p-3 max-h-64 overflow-y-auto font-sans">{doc.content_preview}</pre>
+                        <pre className="whitespace-pre-wrap text-[11px] leading-relaxed text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-teal-500/20 rounded-xl p-3 max-h-64 overflow-y-auto font-sans">{doc.content_preview}</pre>
                       ) : (
                         <p className="text-xs text-slate-400">No preview available.</p>
                       )}

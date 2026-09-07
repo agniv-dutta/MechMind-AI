@@ -1,18 +1,47 @@
 @import "tailwindcss";
 
+/* Class-based dark mode: `dark:` variants follow the `.dark` class toggled
+   by the app's theme switch (default Tailwind v4 follows the OS instead). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
-    --color-brand-cyan: #5EEAD4;
-    --color-brand-teal: #6EE7B7;
-    --color-user-bubble: #1E293B;
+    /* Brand Colors - Exact Specifications */
+    --color-brand-navy: #0a0e27;
+    --color-brand-navy-light: #1a2456;
+    --color-brand-navy-dark: #1a1f3c;
+    --color-brand-teal: #00897b;
+    --color-brand-teal-dark: #005f52;
+    --color-brand-orange: #ff6f00;
+    --color-brand-orange-dark: #e65100;
+    --color-user-bubble: #1a3a52;
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #b0b8d4;
+    --color-text-muted: #7a8aaa;
+    --color-text-dark: #212121;
+    
+    /* Light Mode Colors */
+    --color-bg-primary: #f8f9fa;
+    --color-bg-secondary: #ffffff;
+    --color-bg-tertiary: #f1f3f5;
+    --color-text-light-primary: #212121;
+    --color-text-light-secondary: #495057;
+    --color-text-light-muted: #868e96;
+    --color-border-light: #dee2e6;
   }
 
   body {
-    @apply antialiased text-slate-800 bg-slate-50 dark:bg-slate-950 dark:text-slate-100 font-sans selection:bg-teal-300 selection:text-slate-900;
+    @apply antialiased text-slate-800 bg-slate-50 dark:bg-[#0a0e27] dark:text-slate-100 font-sans selection:bg-teal-500 selection:text-white;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    transition: background-color 300ms ease, color 300ms ease;
+    
+    /* Light mode default (off-white) — the `.dark` class on
+       <html> (see @custom-variant above) switches to navy dark mode. */
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-light-primary);
   }
 
   #root {
@@ -21,10 +50,10 @@
   }
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - Enhanced for specifications */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -32,15 +61,15 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.4);
+  background: rgba(0, 137, 123, 0.3);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.7);
+  background: rgba(0, 137, 123, 0.5);
 }
 
-/* Glowing Animations */
+/* Glowing Animations - Enhanced for specifications */
 @keyframes pulse-subtle {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.7; transform: scale(1.05); }
@@ -50,6 +79,39 @@
   animation: pulse-subtle 2.5s infinite ease-in-out;
 }
 
+/* Landing page motion (CSS-only, no framer-motion required) */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float 6s ease-in-out 1s infinite;
+}
+
+@keyframes loading-bar {
+  0% { width: 8%; }
+  50% { width: 92%; }
+  100% { width: 8%; }
+}
+
+.animate-\[loading_2s_ease-in-out_infinite\] {
+  animation: loading-bar 2s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(0, 137, 123, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(0, 137, 123, 0.8); }
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
 @keyframes highlight-flash {
   0% { background-color: rgba(94, 234, 212, 0.35); transform: translateY(-2px); }
   100% { background-color: transparent; transform: translateY(0); }
@@ -57,4 +119,135 @@
 
 .citation-target-highlight {
   animation: highlight-flash 1.8s ease-out;
+}
+
+/* New animations from specifications */
+@keyframes fade-in-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out;
+}
+
+@keyframes stagger-fade-in {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-stagger-fade-in {
+  animation: stagger-fade-in 0.6s ease-out;
+}
+
+@keyframes scale-in {
+  0% { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.8s ease-out;
+}
+
+@keyframes slide-in-right {
+  0% { opacity: 0; transform: translateX(-20px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.4s ease-out;
+}
+
+@keyframes rotate-gear {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-rotate-gear {
+  animation: rotate-gear 6s linear infinite;
+}
+
+@keyframes text-glow {
+  0%, 100% { text-shadow: 0 0 5px rgba(0, 137, 123, 0.3); }
+  50% { text-shadow: 0 0 20px rgba(0, 137, 123, 0.6); }
+}
+
+.animate-text-glow {
+  animation: text-glow 2s ease-in-out infinite;
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+/* Utility classes for exact specifications */
+.text-navy-primary {
+  color: var(--color-brand-navy);
+}
+
+.text-teal-primary {
+  color: var(--color-brand-teal);
+}
+
+.text-orange-primary {
+  color: var(--color-brand-orange);
+}
+
+.bg-navy-gradient {
+  background: linear-gradient(135deg, var(--color-brand-navy) 0%, var(--color-brand-navy-light) 100%);
+}
+
+.bg-teal-gradient {
+  background: linear-gradient(135deg, var(--color-brand-teal) 0%, var(--color-brand-teal-dark) 100%);
+}
+
+.border-teal-glow {
+  border-color: rgba(0, 137, 123, 0.3);
+  box-shadow: 0 0 10px rgba(0, 137, 123, 0.2);
+}
+
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 137, 123, 0.15);
+}
+
+/* Focus states for accessibility */
+.focus-teal:focus {
+  outline: 2px solid var(--color-brand-teal);
+  outline-offset: 2px;
+}
+
+/* Responsive typography */
+@media (max-width: 768px) {
+  .responsive-text-xl {
+    font-size: 1.25rem;
+  }
+  
+  .responsive-text-2xl {
+    font-size: 1.5rem;
+  }
+  
+  .responsive-text-4xl {
+    font-size: 2rem;
+  }
+  
+  .responsive-text-6xl {
+    font-size: 2.5rem;
+  }
+}
+
+/* Dark mode transitions */
+.dark-mode-transition {
+  transition: background-color 300ms ease, color 300ms ease, border-color 300ms ease;
 }

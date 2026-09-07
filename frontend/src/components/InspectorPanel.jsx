@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import VibrationSpectrum from './VibrationSpectrum';
 
-export default function InspectorPanel({ sources = [], isStreaming = false, activeCitation, onCitationClick }) {
+export default function InspectorPanel({ sources = [], isStreaming = false, activeCitation, onCitationClick, darkMode }) {
   const avgConfidence = sources.length
     ? Math.round((sources.reduce((sum, s) => sum + (s.confidence || 0), 0) / sources.length) * 100)
     : null;
@@ -15,16 +15,22 @@ export default function InspectorPanel({ sources = [], isStreaming = false, acti
   const citationActive = (idx) => activeCitation && activeCitation.id === idx;
 
   return (
-    <aside className="w-[340px] bg-slate-50/90 dark:bg-slate-900/60 border-l border-slate-200 dark:border-slate-800 flex flex-col h-full shrink-0 overflow-y-auto transition-colors duration-200 select-none">
+    <aside
+      className="w-[340px] bg-slate-50/90 dark:bg-[#0a0e27] border-l border-slate-200 dark:border-teal-500/10 flex flex-col h-full shrink-0 overflow-y-auto transition-colors duration-200 select-none"
+      style={{
+        backgroundColor: darkMode ? '#0a0e27' : '#f8f9fa',
+        borderLeft: darkMode ? '1px solid rgba(0,137,123,0.1)' : '1px solid #dee2e6',
+      }}
+    >
       {/* Header & Tabs */}
-      <div className="p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
+      <div className="p-4 bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-teal-500/10 flex items-center justify-between shrink-0">
         <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
           Context Retrieval
         </h2>
         <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
           isStreaming
             ? 'bg-teal-500/15 text-teal-600 dark:text-teal-300 border-teal-500/30 animate-pulse'
-            : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-700'
+            : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-teal-500/20'
         }`}>
           {isStreaming ? 'SCANNING' : sources.length ? 'ACTIVE' : 'IDLE'}
         </span>
@@ -32,7 +38,7 @@ export default function InspectorPanel({ sources = [], isStreaming = false, acti
 
       <div className="p-4 space-y-4 flex-1">
         {/* Confidence Card */}
-        <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs space-y-2.5">
+        <div className="p-4 rounded-xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 shadow-2xs space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
               Confidence Score
@@ -42,7 +48,7 @@ export default function InspectorPanel({ sources = [], isStreaming = false, acti
             </span>
           </div>
 
-          <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-200/50 dark:border-slate-700/50">
+          <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-200/50 dark:border-teal-500/20">
             <div 
               className="h-full bg-[#10B981] rounded-full transition-all duration-500 shadow-sm"
               style={{ width: `${avgConfidence ?? 0}%` }}
@@ -66,7 +72,7 @@ export default function InspectorPanel({ sources = [], isStreaming = false, acti
           </div>
 
           {sources.length === 0 && !isStreaming && (
-            <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 text-center">
+            <div className="p-4 rounded-xl bg-white dark:bg-[#0f172a] border border-slate-200/70 dark:border-teal-500/10 text-center">
               <FileText className="w-5 h-5 text-slate-300 dark:text-slate-600 mx-auto mb-1.5" />
               <p className="text-[11px] text-slate-400 dark:text-slate-500">
                 No sources retrieved yet.
@@ -75,7 +81,7 @@ export default function InspectorPanel({ sources = [], isStreaming = false, acti
           )}
 
           {isStreaming && sources.length === 0 && (
-            <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-2 shadow-2xs">
+            <div className="p-3.5 rounded-xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-teal-500/10 space-y-2 shadow-2xs">
               <div className="flex items-center space-x-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
                 <Loader2 className="w-4 h-4 text-teal-500 animate-spin" />
                 <span>Scanning SCADA logs...</span>
@@ -91,10 +97,10 @@ export default function InspectorPanel({ sources = [], isStreaming = false, acti
             <div
               key={src.id ?? idx}
               onClick={() => onCitationClick && onCitationClick(src)}
-              className={`p-3.5 rounded-xl bg-white dark:bg-slate-900 border flex items-center justify-between shadow-2xs cursor-pointer transition-all ${
+              className={`p-3.5 rounded-xl bg-white dark:bg-[#0f172a] border flex items-center justify-between shadow-2xs cursor-pointer transition-all ${
                 citationActive(idx)
                   ? 'border-teal-500 ring-1 ring-teal-500/40'
-                  : 'border-slate-200 dark:border-slate-800 hover:border-teal-500/40'
+                  : 'border-slate-200 dark:border-teal-500/10 hover:border-teal-500/40'
               }`}
             >
               <div className="flex items-center space-x-3 min-w-0">

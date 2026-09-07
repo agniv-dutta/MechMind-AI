@@ -13,7 +13,7 @@ import {
   Save
 } from 'lucide-react';
 
-export default function DataPrivacy({ onBackToDashboard, onNavigateSettings }) {
+export default function DataPrivacy({ onBackToDashboard, onNavigateSettings, darkMode }) {
   const menuItems = [
     { id: 'settings', label: 'General' },
     { id: 'ai', label: 'AI Configuration' },
@@ -24,7 +24,13 @@ export default function DataPrivacy({ onBackToDashboard, onNavigateSettings }) {
   ];
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-100/60 dark:bg-slate-950 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 transition-colors duration-200">
+    <div
+      className="flex-1 flex flex-col h-full bg-slate-100/60 dark:bg-[#0a0e27] overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 transition-colors duration-200"
+      style={{
+        background: darkMode ? 'linear-gradient(#0a0e27, #1a2456)' : '#f8f9fa',
+        padding: '24px',
+      }}
+    >
 
       {/* 1. Navigation & Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
@@ -36,7 +42,7 @@ export default function DataPrivacy({ onBackToDashboard, onNavigateSettings }) {
             Manage your data retention, export options, and compliance settings.
           </p>
         </div>
-        <div className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-full flex items-center gap-1.5 shrink-0">
+        <div className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-teal-500/20 text-xs font-mono font-bold text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-full flex items-center gap-1.5 shrink-0">
           <Shield className="w-4 h-4" />
           <span>END-TO-END ENCRYPTED</span>
         </div>
@@ -60,7 +66,7 @@ export default function DataPrivacy({ onBackToDashboard, onNavigateSettings }) {
                 className={
                   item.id === 'data'
                     ? 'w-full text-left font-bold text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800 rounded-lg px-3 py-2 text-xs transition-all shadow-sm'
-                    : 'w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200 transition-all'
+                    : 'w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200 transition-all'
                 }
               >
                 {item.label}
@@ -72,7 +78,7 @@ export default function DataPrivacy({ onBackToDashboard, onNavigateSettings }) {
         {/* Central Configuration Cards */}
         <div className="flex-1 min-w-0">
           {/* Card 1: Data Lifecycle Management */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-6">
+          <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 rounded-2xl p-6 shadow-sm space-y-6">
             <div>
               <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <Database className="w-5 h-5 text-slate-700 dark:text-slate-300" />
@@ -86,7 +92,7 @@ export default function DataPrivacy({ onBackToDashboard, onNavigateSettings }) {
             {/* Grid Row (2 Action Sub-Cards) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Sub-Card A: Export Telemetry */}
-              <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3 relative">
+              <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-teal-500/20 rounded-xl p-4 space-y-3 relative">
                 <div className="flex items-center justify-between">
                   <Download className="w-5 h-5 text-slate-700 dark:text-slate-300" />
                   <span className="text-[10px] font-mono text-slate-400 bg-slate-200 dark:bg-slate-700 dark:text-slate-300 px-2 py-0.5 rounded">
@@ -105,7 +111,7 @@ export default function DataPrivacy({ onBackToDashboard, onNavigateSettings }) {
               </div>
 
               {/* Sub-Card B: Purge Vector Cache */}
-              <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3 relative">
+              <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-teal-500/20 rounded-xl p-4 space-y-3 relative">
                 <div className="flex items-center justify-between">
                   <Database className="w-5 h-5 text-slate-700 dark:text-slate-300" />
                   <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
@@ -128,7 +134,7 @@ export default function DataPrivacy({ onBackToDashboard, onNavigateSettings }) {
           </div>
 
           {/* Card 2: Danger Zone (Data Eradication) */}
-          <div className="bg-white dark:bg-slate-900 border-l-4 border-red-500 border-y border-r border-slate-200 dark:border-slate-800 rounded-r-2xl p-6 flex items-center justify-between shadow-sm mt-6 gap-4 flex-col sm:flex-row">
+          <div className="bg-white dark:bg-[#0f172a] border-l-4 border-red-500 border-y border-r border-slate-200 dark:border-teal-500/10 rounded-r-2xl p-6 flex items-center justify-between shadow-sm mt-6 gap-4 flex-col sm:flex-row">
             <div>
               <h2 className="text-base font-bold text-red-600 flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-red-500" />
@@ -144,7 +150,7 @@ export default function DataPrivacy({ onBackToDashboard, onNavigateSettings }) {
           </div>
 
           {/* 4. Sticky Bottom Action Bar */}
-          <div className="bg-slate-100/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between mt-8 sticky bottom-0 gap-3">
+          <div className="bg-slate-100/90 dark:bg-[#0f172a]/90 backdrop-blur-md border-t border-slate-200 dark:border-teal-500/10 p-4 flex items-center justify-between mt-8 sticky bottom-0 gap-3">
             <button className="text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 uppercase tracking-wider transition-colors">
               REVERT TO DEFAULTS
             </button>
@@ -161,7 +167,7 @@ export default function DataPrivacy({ onBackToDashboard, onNavigateSettings }) {
         {/* 3. Right Inspector Panel (~300px width) */}
         <div className="w-full md:w-[300px] shrink-0">
           {/* Card 1: Compliance Directives */}
-          <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4">
+          <div className="bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 rounded-2xl p-5 space-y-4">
             <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base">
               Compliance Directives
             </h3>
@@ -192,7 +198,7 @@ export default function DataPrivacy({ onBackToDashboard, onNavigateSettings }) {
               <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-2">
                 This instance complies with EU General Data Protection Regulation (GDPR) mandates. Data processing is confined to diagnostic parameters necessary for operational integrity. No telemetry is sold to third parties.
               </p>
-              <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-1.5 text-xs font-mono">
+              <div className="mt-4 pt-3 border-t border-slate-200 dark:border-teal-500/10 space-y-1.5 text-xs font-mono">
                 <div className="flex justify-between">
                   <span className="text-slate-500">Region:</span>
                   <span className="text-slate-500">EU-CENTRAL-1</span>
@@ -210,7 +216,7 @@ export default function DataPrivacy({ onBackToDashboard, onNavigateSettings }) {
           </div>
 
           {/* Card 2: Security Watermark Graphic Box */}
-          <div className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 text-center mt-6 flex flex-col justify-center items-center h-32 relative overflow-hidden">
+          <div className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-teal-500/20 rounded-2xl p-6 text-center mt-6 flex flex-col justify-center items-center h-32 relative overflow-hidden">
             <span className="text-[10px] font-mono tracking-widest text-slate-400 uppercase relative z-10">
               PROTOCOL SYNC
             </span>

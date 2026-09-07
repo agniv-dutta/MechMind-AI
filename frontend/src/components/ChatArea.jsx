@@ -24,7 +24,8 @@ export default function ChatArea({
   activeCitation, 
   onCitationClick,
   onSourcesChange,
-  onStreamingChange
+  onStreamingChange,
+  darkMode
 }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -152,9 +153,15 @@ export default function ChatArea({
   const suggestionClick = (s) => sendMessage(s);
 
   return (
-    <main className="flex-1 flex flex-col h-full bg-slate-100/60 dark:bg-slate-950 min-w-0 transition-colors duration-200">
+    <main
+      className="flex-1 flex flex-col h-full bg-slate-100/60 dark:bg-[#0a0e27] min-w-0 transition-colors duration-200"
+      style={{
+        background: darkMode ? 'linear-gradient(#0a0e27, #1a2456)' : '#f8f9fa',
+        padding: '24px',
+      }}
+    >
       {/* Chat Header */}
-      <div className="h-16 px-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0 shadow-xs">
+      <div className="h-16 px-6 bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-teal-500/10 flex items-center justify-between shrink-0 shadow-xs">
         <div className="flex items-center space-x-3">
           <div className="w-9 h-9 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-300 flex items-center justify-center border border-teal-500/20">
             <Bot className="w-5 h-5" />
@@ -188,20 +195,20 @@ export default function ChatArea({
         <div className="flex items-center space-x-1">
           <button 
             title="Session Options" 
-            className="p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
           >
             <SlidersHorizontal className="w-4 h-4" />
           </button>
           <button 
             title="Reset Session" 
             onClick={resetSession}
-            className="p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
           >
             <RotateCcw className="w-4 h-4" />
           </button>
           <button 
             title="More Options" 
-            className="p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
           >
             <MoreVertical className="w-4 h-4" />
           </button>
@@ -212,7 +219,7 @@ export default function ChatArea({
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
         {messages.length === 0 && (
           <div className="flex justify-center">
-            <span className="px-3.5 py-1 rounded-full text-xs font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400 shadow-xs border border-slate-300/50 dark:border-slate-700/50">
+            <span className="px-3.5 py-1 rounded-full text-xs font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400 shadow-xs border border-slate-300/50 dark:border-teal-500/20">
               {offlineMode ? 'Offline mode active' : 'New conversation'}
             </span>
           </div>
@@ -234,7 +241,7 @@ export default function ChatArea({
                 <Bot className="w-5 h-5" />
               </div>
               <div className="flex-1 space-y-3">
-                <div className="bg-[#F1F5F9] dark:bg-slate-900 text-slate-800 dark:text-slate-200 p-5 rounded-2xl rounded-tl-none border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-4">
+                <div className="bg-[#F1F5F9] dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 p-5 rounded-2xl rounded-tl-none border border-slate-200/90 dark:border-teal-500/10 shadow-sm space-y-4">
                   {msg.content ? (
                     <p className="text-sm leading-relaxed font-normal text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{msg.content}</p>
                   ) : (
@@ -258,7 +265,7 @@ export default function ChatArea({
                         className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all flex items-center space-x-1.5 ${
                           activeCitation?.id === c.id
                             ? 'bg-teal-50 dark:bg-teal-950 border-teal-500 text-teal-700 dark:text-teal-300'
-                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-teal-500/50'
+                            : 'bg-white dark:bg-[#0f172a] border-slate-200 dark:border-teal-500/10 text-slate-600 dark:text-slate-400 hover:border-teal-500/50'
                         }`}
                       >
                         <span className="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
@@ -279,7 +286,7 @@ export default function ChatArea({
               <button
                 key={idx}
                 onClick={() => suggestionClick(sugg)}
-                className="px-3.5 py-1.5 rounded-full bg-white dark:bg-slate-900 text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-teal-500/50 hover:text-teal-600 dark:hover:text-teal-300 transition-all shadow-2xs flex items-center space-x-1 group"
+                className="px-3.5 py-1.5 rounded-full bg-white dark:bg-[#0f172a] text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-teal-500/10 hover:border-teal-500/50 hover:text-teal-600 dark:hover:text-teal-300 transition-all shadow-2xs flex items-center space-x-1 group"
               >
                 <span>{sugg}</span>
                 <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-teal-500 transition-transform group-hover:translate-x-0.5" />
@@ -301,8 +308,8 @@ export default function ChatArea({
       </div>
 
       {/* Input Area */}
-      <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0">
-        <div className="rounded-2xl bg-slate-100/80 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 p-3 transition-all focus-within:ring-2 focus-within:ring-teal-500/40 focus-within:border-teal-500">
+      <div className="p-4 bg-white dark:bg-[#0f172a] border-t border-slate-200 dark:border-teal-500/10 shrink-0">
+        <div className="rounded-2xl bg-slate-100/80 dark:bg-slate-800/40 border border-slate-200 dark:border-teal-500/20 p-3 transition-all focus-within:ring-2 focus-within:ring-teal-500/40 focus-within:border-teal-500">
           <textarea
             rows={2}
             value={input}
@@ -313,7 +320,7 @@ export default function ChatArea({
             className="w-full bg-transparent text-sm text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none resize-none"
           />
 
-          <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+          <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-teal-500/20">
             {/* Bottom left actions */}
             <div className="flex items-center space-x-2">
               <button type="button" className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" title="Attach file (coming soon)">

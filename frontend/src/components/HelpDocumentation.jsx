@@ -12,7 +12,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 
-export default function HelpDocumentation({ onBackToDashboard }) {
+export default function HelpDocumentation({ onBackToDashboard, darkMode }) {
   const [docSearch, setDocSearch] = useState('');
   const [activeArticle, setActiveArticle] = useState('Getting Started');
 
@@ -38,7 +38,13 @@ export default function HelpDocumentation({ onBackToDashboard }) {
   ];
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-100/60 dark:bg-slate-950 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 transition-colors duration-200">
+    <div
+      className="flex-1 flex flex-col h-full bg-slate-100/60 dark:bg-[#0a0e27] overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 transition-colors duration-200"
+      style={{
+        background: darkMode ? 'linear-gradient(#0a0e27, #1a2456)' : '#f8f9fa',
+        padding: '24px',
+      }}
+    >
 
       {/* 1. Page Header Bar & Search Bar */}
       <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
@@ -50,7 +56,7 @@ export default function HelpDocumentation({ onBackToDashboard }) {
             Find guides, API references, and troubleshooting resources.
           </p>
         </div>
-        <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-700 dark:text-slate-200 w-64 flex items-center justify-between gap-2 shrink-0 shadow-sm">
+        <div className="bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/20 rounded-xl px-4 py-2 text-sm text-slate-700 dark:text-slate-200 w-64 flex items-center justify-between gap-2 shrink-0 shadow-sm">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <Search className="w-4 h-4 text-slate-400 shrink-0" />
             <input
@@ -70,7 +76,7 @@ export default function HelpDocumentation({ onBackToDashboard }) {
       <div className="flex flex-col lg:flex-row gap-6 items-start">
 
         {/* 2. Documentation Navigation Sidebar (~220px width) */}
-        <aside className="w-full lg:w-[220px] shrink-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-5 text-xs font-medium text-slate-600 dark:text-slate-400">
+        <aside className="w-full lg:w-[220px] shrink-0 bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 rounded-2xl p-4 shadow-sm space-y-5 text-xs font-medium text-slate-600 dark:text-slate-400">
           {navCategories.map((cat, ci) => (
             <div key={cat.header}>
               <span className={`text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2 ${ci > 0 ? 'mt-4' : ''}`}>
@@ -104,7 +110,7 @@ export default function HelpDocumentation({ onBackToDashboard }) {
         </aside>
 
         {/* 3. Main Reader Article Canvas (Center Column) */}
-        <article className="flex-1 min-w-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-sm">
+        <article className="flex-1 min-w-0 bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 rounded-2xl p-6 sm:p-8 shadow-sm">
           {/* Breadcrumb Navigation */}
           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1 mb-3">
             <span>USER GUIDES</span>
@@ -136,7 +142,7 @@ export default function HelpDocumentation({ onBackToDashboard }) {
           </p>
 
           {/* Section 2: Video Tutorial Card */}
-          <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 mt-6 shadow-sm aspect-video bg-slate-900 text-white flex flex-col justify-end p-4">
+          <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-teal-500/20 mt-6 shadow-sm aspect-video bg-slate-900 text-white flex flex-col justify-end p-4">
             {/* Thumbnail backdrop */}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/80 to-slate-800">
               <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:18px_18px] opacity-20"></div>
@@ -160,15 +166,15 @@ export default function HelpDocumentation({ onBackToDashboard }) {
         {/* 4. Right Inspector & Actions Panel (~280px width) */}
         <div className="w-full lg:w-[280px] shrink-0">
           {/* Card 1: Article Feedback Widget */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 text-center space-y-3 shadow-sm">
+          <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 rounded-2xl p-5 text-center space-y-3 shadow-sm">
             <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
               Was this article helpful?
             </h4>
             <div className="flex justify-center gap-3 mt-2">
-              <button className="bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 p-2.5 rounded-xl text-slate-700 dark:text-slate-200 transition-colors">
+              <button className="bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-white/5 border border-slate-200 dark:border-teal-500/20 p-2.5 rounded-xl text-slate-700 dark:text-slate-200 transition-colors">
                 <ThumbsUp className="w-4 h-4" />
               </button>
-              <button className="bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 p-2.5 rounded-xl text-slate-700 dark:text-slate-200 transition-colors">
+              <button className="bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-white/5 border border-slate-200 dark:border-teal-500/20 p-2.5 rounded-xl text-slate-700 dark:text-slate-200 transition-colors">
                 <ThumbsDown className="w-4 h-4" />
               </button>
             </div>
@@ -190,7 +196,7 @@ export default function HelpDocumentation({ onBackToDashboard }) {
           </div>
 
           {/* Card 3: Related Articles */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 mt-6 shadow-sm">
+          <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 rounded-2xl p-5 space-y-4 mt-6 shadow-sm">
             <h4 className="font-bold text-slate-900 dark:text-slate-100 text-base mb-3">
               Related Articles
             </h4>

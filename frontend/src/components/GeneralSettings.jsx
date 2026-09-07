@@ -31,10 +31,16 @@ export default function GeneralSettings({ onBackToDashboard, onNavigateSettings,
   ];
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-100/60 dark:bg-slate-950 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 transition-colors duration-200">
+    <div
+      className="flex-1 flex flex-col h-full bg-slate-100/60 dark:bg-[#0a0e27] overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 transition-colors duration-200"
+      style={{
+        background: darkMode ? 'linear-gradient(#0a0e27, #1a2456)' : '#f8f9fa',
+        padding: '24px',
+      }}
+    >
       
       {/* 1. Navigation & Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#0f172a] p-5 rounded-2xl border border-slate-200 dark:border-teal-500/10 shadow-2xs">
         <div className="flex items-center space-x-3">
           <button
             onClick={onBackToDashboard}
@@ -48,7 +54,7 @@ export default function GeneralSettings({ onBackToDashboard, onNavigateSettings,
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setDarkMode(!darkMode)}
-            className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5"
           >
             {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
           </button>
@@ -80,7 +86,7 @@ export default function GeneralSettings({ onBackToDashboard, onNavigateSettings,
                 className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
                   item.id === 'settings'
                     ? 'bg-slate-900 text-white dark:bg-teal-500 dark:text-slate-950 shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/70 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/70 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
                 {item.label}
@@ -93,8 +99,8 @@ export default function GeneralSettings({ onBackToDashboard, onNavigateSettings,
         <div className="flex-1 space-y-6">
           
           {/* Card 1: Appearance & Locale */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xs space-y-6">
-            <div className="flex items-center space-x-2 text-lg font-bold text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 rounded-2xl p-6 shadow-2xs space-y-6">
+            <div className="flex items-center space-x-2 text-lg font-bold text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-teal-500/10 pb-3">
               <Globe className="w-5 h-5 text-teal-500" />
               <h2>Appearance & Locale</h2>
             </div>
@@ -112,7 +118,7 @@ export default function GeneralSettings({ onBackToDashboard, onNavigateSettings,
                   className={`p-4 rounded-xl text-center cursor-pointer relative transition-all ${
                     themeMode === 'light'
                       ? 'border-2 border-slate-900 dark:border-teal-400 bg-slate-50 dark:bg-slate-800 shadow-xs'
-                      : 'border border-slate-200 dark:border-slate-800 bg-slate-50/50 hover:bg-slate-100'
+                      : 'border border-slate-200 dark:border-teal-500/10 bg-slate-50/50 hover:bg-slate-100'
                   }`}
                 >
                   {themeMode === 'light' && (
@@ -130,7 +136,7 @@ export default function GeneralSettings({ onBackToDashboard, onNavigateSettings,
                   className={`p-4 rounded-xl text-center cursor-pointer relative transition-all ${
                     themeMode === 'dark'
                       ? 'border-2 border-slate-900 dark:border-teal-400 bg-slate-900 text-white shadow-xs'
-                      : 'border border-slate-200 dark:border-slate-800 bg-slate-900 text-slate-300'
+                      : 'border border-slate-200 dark:border-teal-500/10 bg-slate-900 text-slate-300'
                   }`}
                 >
                   {themeMode === 'dark' && (
@@ -148,7 +154,7 @@ export default function GeneralSettings({ onBackToDashboard, onNavigateSettings,
                   className={`p-4 rounded-xl text-center cursor-pointer relative transition-all ${
                     themeMode === 'system'
                       ? 'border-2 border-slate-900 dark:border-teal-400 bg-slate-200 text-slate-900 shadow-xs'
-                      : 'border border-slate-200 dark:border-slate-800 bg-slate-200/60 text-slate-500'
+                      : 'border border-slate-200 dark:border-teal-500/10 bg-slate-200/60 text-slate-500'
                   }`}
                 >
                   {themeMode === 'system' && (
@@ -172,7 +178,7 @@ export default function GeneralSettings({ onBackToDashboard, onNavigateSettings,
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 dark:text-slate-200 appearance-none focus:outline-none"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-teal-500/20 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 dark:text-slate-200 appearance-none focus:outline-none"
                 >
                   <option>English (US)</option>
                   <option>German (Deutsch)</option>
@@ -188,14 +194,14 @@ export default function GeneralSettings({ onBackToDashboard, onNavigateSettings,
           </div>
 
           {/* Card 2: Behavior & Notifications */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xs space-y-6">
-            <div className="flex items-center space-x-2 text-lg font-bold text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 rounded-2xl p-6 shadow-2xs space-y-6">
+            <div className="flex items-center space-x-2 text-lg font-bold text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-teal-500/10 pb-3">
               <Sliders className="w-5 h-5 text-teal-500" />
               <h2>Behavior & Notifications</h2>
             </div>
 
             {/* Setting Row 1: Enable system notifications */}
-            <div className="bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/60 rounded-xl p-4 flex items-center justify-between">
+            <div className="bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-teal-500/20 rounded-xl p-4 flex items-center justify-between">
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
                   Enable system notifications
@@ -207,7 +213,7 @@ export default function GeneralSettings({ onBackToDashboard, onNavigateSettings,
               <button
                 onClick={() => setNotifications(!notifications)}
                 className={`w-12 h-6 rounded-full transition-colors p-1 ${
-                  notifications ? 'bg-[#0D6857]' : 'bg-slate-300 dark:bg-slate-700'
+                  notifications ? 'bg-[#00897b]' : 'bg-slate-300 dark:bg-slate-700'
                 }`}
               >
                 <div className={`w-4 h-4 rounded-full bg-white transition-transform ${notifications ? 'translate-x-6' : 'translate-x-0'}`}></div>
@@ -215,7 +221,7 @@ export default function GeneralSettings({ onBackToDashboard, onNavigateSettings,
             </div>
 
             {/* Setting Row 2: Auto-save diagnostic sessions */}
-            <div className="bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/60 rounded-xl p-4 flex items-center justify-between">
+            <div className="bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-teal-500/20 rounded-xl p-4 flex items-center justify-between">
               <div>
                 <div className="flex items-center space-x-2">
                   <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
@@ -232,7 +238,7 @@ export default function GeneralSettings({ onBackToDashboard, onNavigateSettings,
               <button
                 onClick={() => setAutosave(!autosave)}
                 className={`w-12 h-6 rounded-full transition-colors p-1 ${
-                  autosave ? 'bg-[#0D6857]' : 'bg-slate-300 dark:bg-slate-700'
+                  autosave ? 'bg-[#00897b]' : 'bg-slate-300 dark:bg-slate-700'
                 }`}
               >
                 <div className={`w-4 h-4 rounded-full bg-white transition-transform ${autosave ? 'translate-x-6' : 'translate-x-0'}`}></div>
@@ -251,7 +257,7 @@ export default function GeneralSettings({ onBackToDashboard, onNavigateSettings,
                     onClick={() => setSearchMode(mode)}
                     className={`flex-1 py-2 text-xs font-bold rounded-lg capitalize transition-all ${
                       searchMode === mode
-                        ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-sm'
+                        ? 'bg-white dark:bg-[#0f172a] text-slate-900 dark:text-slate-100 shadow-sm'
                         : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
                     }`}
                   >
@@ -266,7 +272,7 @@ export default function GeneralSettings({ onBackToDashboard, onNavigateSettings,
           </div>
 
           {/* 5. Sticky Bottom Action Bar */}
-          <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-center justify-between shadow-lg sticky bottom-4 z-30">
+          <div className="bg-white/90 dark:bg-[#0f172a]/90 backdrop-blur-md border border-slate-200 dark:border-teal-500/10 rounded-2xl p-4 flex items-center justify-between shadow-lg sticky bottom-4 z-30">
             <div className="flex items-center space-x-2">
               <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse"></span>
               <span className="text-xs font-bold text-orange-600 dark:text-orange-400 tracking-wider uppercase">
@@ -275,10 +281,10 @@ export default function GeneralSettings({ onBackToDashboard, onNavigateSettings,
             </div>
 
             <div className="flex items-center space-x-3">
-              <button className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-4 py-2.5 rounded-xl uppercase tracking-wider transition-colors">
+              <button className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 text-xs font-bold px-4 py-2.5 rounded-xl uppercase tracking-wider transition-colors">
                 RESET TO DEFAULTS
               </button>
-              <button className="bg-[#0D6857] hover:bg-teal-900 text-white text-xs font-bold px-5 py-2.5 rounded-xl uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all">
+              <button className="bg-[#00897b] hover:bg-[#00796b] text-white text-xs font-bold px-5 py-2.5 rounded-xl uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all">
                 <Save className="w-4 h-4" />
                 <span>SAVE CHANGES</span>
               </button>
@@ -291,7 +297,7 @@ export default function GeneralSettings({ onBackToDashboard, onNavigateSettings,
         <div className="w-full md:w-[300px] space-y-6 shrink-0">
           
           {/* Card 1: System Status */}
-          <div className="bg-[#18224B] dark:bg-slate-900 text-white rounded-2xl p-5 relative overflow-hidden shadow-md space-y-4 border border-indigo-900/50">
+          <div className="bg-[#18224B] dark:bg-[#0f172a] text-white rounded-2xl p-5 relative overflow-hidden shadow-md space-y-4 border border-indigo-900/50">
             <div className="flex items-center space-x-2 font-bold text-base">
               <Cpu className="w-5 h-5 text-teal-300" />
               <span>System Status</span>
@@ -323,7 +329,7 @@ export default function GeneralSettings({ onBackToDashboard, onNavigateSettings,
           </div>
 
           {/* Card 2: Storage Usage */}
-          <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-2xs">
+          <div className="bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-teal-500/10 rounded-2xl p-5 space-y-4 shadow-2xs">
             <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base">
               Storage Usage
             </h3>
