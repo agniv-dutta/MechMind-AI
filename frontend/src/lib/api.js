@@ -21,6 +21,10 @@ export function getHealth() {
   return request('/api/health');
 }
 
+export function getHealthDetailed() {
+  return request('/api/health/detailed');
+}
+
 export function listDocuments({ skip = 0, limit = 50 } = {}) {
   return request(`/api/documents?skip=${skip}&limit=${limit}`);
 }

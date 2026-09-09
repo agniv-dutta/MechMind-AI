@@ -4,6 +4,8 @@ from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import logging
 from datetime import datetime
+import time
+from uuid import uuid4
 import sys
 import os
 
@@ -12,17 +14,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.config import settings
 from app.routes import documents, chat, search, knowledge_graph, ai, field
+from app.utils.logger import setup_logging
 
-# Configure logging
-os.makedirs(os.path.dirname(settings.LOG_FILE) or '.', exist_ok=True)
-logging.basicConfig(
-    level=getattr(logging, settings.LOG_LEVEL),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(settings.LOG_FILE),
-        logging.StreamHandler()
-    ]
-)
+# ── Structured JSON logging ──────────────────────────────────────────
+setup_logging(log_level=settings.LOG_LEVEL, log_file=settings.LOG_FILE)
 logger = logging.getLogger(__name__)
 
 
@@ -30,27 +25,37 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Application lifespan manager"""
     logger.info("Starting Industrial Troubleshooting AI Assistant")
-    
-    # Initialize services on startup
+
+    # 1. Initialize database tables
     try:
-        # Initialize vector store
+        from app.models.database import init_db, validate_db
+        init_db()
+        validate_db()
+        logger.info("Database tables verified / created")
+    except Exception as e:
+        logger.error(f"Database initialization failed: {e}")
+        raise
+
+    # 2. Initialize services
+    try:
         from app.services.vector_store import VectorStore
         app.state.vector_store = VectorStore()
         await app.state.vector_store.initialize(settings.EMBEDDING_MODEL)
         logger.info("Vector store initialized")
-        
-        # Initialize knowledge graph
+    except Exception as e:
+        logger.error(f"Vector store init failed (non-fatal): {e}")
+
+    try:
         from app.services.knowledge_graph_service import KnowledgeGraphService
         app.state.knowledge_graph = KnowledgeGraphService()
         await app.state.knowledge_graph.initialize()
         logger.info("Knowledge graph initialized")
-        
     except Exception as e:
-        logger.error(f"Error during startup: {e}")
-        # Continue startup even if services fail
-    
+        logger.error(f"Knowledge graph init failed (non-fatal): {e}")
+
+    logger.info("Startup complete")
     yield
-    
+
     # Cleanup on shutdown
     logger.info("Shutting down Industrial Troubleshooting AI Assistant")
     try:
@@ -83,20 +88,29 @@ app.add_middleware(
 )
 
 
-# Request logging middleware
+# Request logging middleware with request IDs
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    """Log all incoming requests"""
-    start_time = datetime.now()
-    
+    """Log all incoming requests with timing and request IDs"""
+    request_id = str(uuid4())[:8]
+    request.state.request_id = request_id
+    start = time.time()
+
     response = await call_next(request)
-    
-    duration = (datetime.now() - start_time).total_seconds() * 1000
+
+    elapsed_ms = (time.time() - start) * 1000
     logger.info(
-        f"{request.method} {request.url.path} - "
-        f"Status: {response.status_code} - Duration: {duration:.2f}ms"
+        f"{request.method} {request.url.path} {response.status_code} {elapsed_ms:.1f}ms",
+        extra={"extra_fields": {
+            "request_id": request_id,
+            "method": request.method,
+            "path": request.url.path,
+            "status_code": response.status_code,
+            "elapsed_ms": round(elapsed_ms, 1),
+            "client": request.client.host if request.client else None,
+        }},
     )
-    
+    response.headers["X-Request-ID"] = request_id
     return response
 
 
@@ -168,21 +182,79 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    request_id = getattr(request.state, "request_id", None)
+    logger.error(f"Unhandled exception: {exc}", exc_info=True,
+                 extra={"extra_fields": {"request_id": request_id}})
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal server error"}
     )
 
 
-# Health check endpoint
+# Register structured API exception handlers
+from app.exceptions.handlers import APIException, api_exception_handler  # noqa: E402
+app.add_exception_handler(APIException, api_exception_handler)
+
+
+# ── Health check endpoints ────────────────────────────────────────────
 @app.get("/api/health")
 async def health_check():
-    """Health check endpoint"""
+    """Basic health check"""
     return {
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
-        "version": "1.0.0"
+        "version": "1.0.0",
+    }
+
+
+@app.get("/api/health/detailed")
+async def detailed_health():
+    """Detailed health check with service statuses"""
+    checks = {"api": "ok", "database": "unknown", "vector_store": "unknown", "knowledge_graph": "unknown", "llm": "unknown"}
+
+    # Database
+    try:
+        from app.models.database import engine
+        with engine.connect() as conn:
+            conn.execute(__import__("sqlalchemy").text("SELECT 1"))
+        checks["database"] = "ok"
+    except Exception as e:
+        checks["database"] = f"error: {e}"
+
+    # Vector store
+    try:
+        if hasattr(app.state, "vector_store") and app.state.vector_store:
+            checks["vector_store"] = "ok"
+        else:
+            checks["vector_store"] = "not_initialized"
+    except Exception as e:
+        checks["vector_store"] = f"error: {e}"
+
+    # Knowledge graph
+    try:
+        if hasattr(app.state, "knowledge_graph") and app.state.knowledge_graph:
+            checks["knowledge_graph"] = "ok"
+        else:
+            checks["knowledge_graph"] = "not_initialized"
+    except Exception as e:
+        checks["knowledge_graph"] = f"error: {e}"
+
+    # LLM
+    try:
+        if settings.GROQ_API_KEY:
+            checks["llm"] = "configured"
+        else:
+            checks["llm"] = "no_api_key"
+    except Exception as e:
+        checks["llm"] = f"error: {e}"
+
+    overall = "healthy" if checks["database"] == "ok" else "degraded"
+
+    return {
+        "status": overall,
+        "checks": checks,
+        "timestamp": datetime.now().isoformat(),
+        "version": "1.0.0",
     }
 
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Settings as SettingsIcon, 
   Globe, 
@@ -10,12 +10,40 @@ import {
   ArrowLeft,
   ChevronDown
 } from 'lucide-react';
+import { getHealthDetailed } from '../lib/api';
 
 export default function GeneralSettings({ onBackToDashboard, onNavigateSettings }) {
   const [notifications, setNotifications] = useState(true);
   const [autosave, setAutosave] = useState(true);
   const [searchMode, setSearchMode] = useState('hybrid');
   const [language, setLanguage] = useState('English (US)');
+  const [health, setHealth] = useState(null);
+
+  useEffect(() => {
+    getHealthDetailed()
+      .then(setHealth)
+      .catch(() => setHealth(null));
+  }, []);
+
+  const healthStatus = (key) => {
+    const val = health?.checks?.[key];
+    if (val === 'ok' || val === 'configured') return { dot: 'bg-emerald-400', text: 'text-emerald-400', label: 'Healthy' };
+    if (val === 'not_initialized') return { dot: 'bg-amber-400', text: 'text-amber-400', label: 'Pending' };
+    return { dot: 'bg-red-400', text: 'text-red-400', label: 'Offline' };
+  };
+
+  const row = (service, key) => {
+    const s = healthStatus(key);
+    return (
+      <div className="flex justify-between items-center">
+        <span className="text-slate-300">{service}</span>
+        <span className={`font-mono font-bold ${s.text} flex items-center gap-1.5`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${s.dot} animate-pulse`}></span>
+          {s.label}
+        </span>
+      </div>
+    );
+  };
 
   const menuItems = [
     { id: 'settings', label: 'General' },
@@ -245,27 +273,11 @@ export default function GeneralSettings({ onBackToDashboard, onNavigateSettings 
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="flex justify-between items-center">
-                <span className="text-slate-300">Core API</span>
-                <span className="font-mono font-bold text-emerald-400 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  24ms
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-300">NLP Engine</span>
-                <span className="font-mono font-bold text-emerald-400 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  112ms
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-300">Sync Service</span>
-                <span className="font-mono font-bold text-amber-400 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
-                  Syncing...
-                </span>
-              </div>
+              {row('Core API', 'api')}
+              {row('Database', 'database')}
+              {row('Vector Store', 'vector_store')}
+              {row('Knowledge Graph', 'knowledge_graph')}
+              {row('LLM Service', 'llm')}
             </div>
           </div>
 

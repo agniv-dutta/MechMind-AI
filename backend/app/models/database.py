@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine, Column, String, Integer, Text, Boolean, Float, DateTime, ForeignKey, Index
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.pool import QueuePool
 from datetime import datetime
 import uuid
 
@@ -9,12 +10,23 @@ from app.config import settings
 # Create base class for models
 Base = declarative_base()
 
-# Create database engine
-engine = create_engine(
-    settings.DATABASE_URL,
-    echo=settings.API_ENV == "development",
-    connect_args={"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {}
-)
+# Create database engine with connection pooling
+_is_sqlite = "sqlite" in settings.DATABASE_URL
+_engine_kwargs = {
+    "echo": settings.API_ENV == "development",
+}
+if _is_sqlite:
+    _engine_kwargs["connect_args"] = {"check_same_thread": False}
+else:
+    _engine_kwargs.update({
+        "poolclass": QueuePool,
+        "pool_size": 20,
+        "max_overflow": 40,
+        "pool_recycle": 3600,
+        "pool_pre_ping": True,
+    })
+
+engine = create_engine(settings.DATABASE_URL, **_engine_kwargs)
 
 # Create session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -262,6 +274,19 @@ class ChatSession(Base):
 def init_db():
     """Initialize database tables"""
     Base.metadata.create_all(bind=engine)
+
+
+def validate_db():
+    """Verify all required tables and indexes exist"""
+    from sqlalchemy import inspect as sa_inspect
+    inspector = sa_inspect(engine)
+    tables = set(inspector.get_table_names())
+    required = {"documents", "document_chunks", "document_metadata", "citations",
+                "entities", "relationships", "chat_messages", "chat_sessions"}
+    missing = required - tables
+    if missing:
+        raise RuntimeError(f"Missing database tables: {missing}")
+    return True
 
 
 def drop_db():
