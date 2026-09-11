@@ -17,6 +17,7 @@ import DataPrivacy from './components/DataPrivacy';
 import HelpDocumentation from './components/HelpDocumentation';
 import LandingPage from './pages/LandingPage.jsx';
 import FieldAssistancePage from './pages/FieldAssistancePage.jsx';
+import DashboardPage from './pages/DashboardPage.jsx';
 import Toasts from './components/common/Toast.jsx';
 import { ErrorBoundary } from './components/common/ErrorBoundary.jsx';
 import { NotificationProvider } from './context/NotificationContext.jsx';
@@ -101,6 +102,8 @@ export default function App() {
           <HelpDocumentation
             onBackToDashboard={() => setActiveNav('chat')}
           />
+        ) : activeNav === 'dashboard' ? (
+          <DashboardPage />
         ) : activeNav === 'data' ? (
           <DataPrivacy
             onBackToDashboard={() => setActiveNav('chat')}

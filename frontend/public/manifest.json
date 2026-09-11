@@ -1,0 +1,43 @@
+{
+  "name": "MechMind AI – Industrial Diagnostic Platform",
+  "short_name": "MechMind AI",
+  "description": "AI-powered industrial diagnostic platform. Diagnose equipment failures in seconds with citation-backed answers from your technical documentation.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f8fafc",
+  "theme_color": "#1e2a5e",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ask MechMind",
+      "short_name": "Ask",
+      "url": "/?nav=chat"
+    },
+    {
+      "name": "Knowledge Graph",
+      "short_name": "Graph",
+      "url": "/?nav=graph"
+    }
+  ]
+}

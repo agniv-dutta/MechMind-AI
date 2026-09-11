@@ -262,3 +262,15 @@ export function quickFix({ equipmentType, symptom }) {
 export function getOfflinePackUrl() {
   return `${BASE_URL}/api/field/offline-pack`;
 }
+
+export function getDashboardMetrics() {
+  return request('/api/analytics/dashboard').then((r) => r.data);
+}
+
+export function getAnalyticsTimeline(days = 30) {
+  return request(`/api/analytics/timeline?days=${days}`).then((r) => r.data);
+}
+
+export function getEquipmentTypes() {
+  return request('/api/analytics/equipment-types').then((r) => r.data);
+}

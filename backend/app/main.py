@@ -13,7 +13,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.config import settings
-from app.routes import documents, chat, search, knowledge_graph, ai, field
+from app.routes import documents, chat, search, knowledge_graph, ai, field, analytics, predictive
 from app.utils.logger import setup_logging
 
 # ── Structured JSON logging ──────────────────────────────────────────
@@ -265,6 +265,8 @@ app.include_router(search.router, prefix="/api/search", tags=["search"])
 app.include_router(knowledge_graph.router, prefix="/api/knowledge-graph", tags=["knowledge-graph"])
 app.include_router(ai.router, prefix="/api/ai", tags=["ai"])
 app.include_router(field.router, prefix="/api/field", tags=["field"])
+app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
+app.include_router(predictive.router, prefix="/api/predictive", tags=["predictive"])
 
 
 # Root endpoint
