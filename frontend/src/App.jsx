@@ -69,7 +69,7 @@ export default function App() {
   if (activeNav === 'landing') {
     return (
       <NotificationProvider>
-        <LandingPage onEnter={() => setActiveNav('chat')} />
+        <LandingPage onEnter={() => setActiveNav('dashboard')} />
         <Toasts />
       </NotificationProvider>
     );

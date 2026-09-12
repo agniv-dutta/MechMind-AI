@@ -51,9 +51,17 @@ export function DashboardPage() {
     <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6" style={{ background: '#f8fafc' }}>
       {/* Header */}
       <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-          <p className="text-sm text-slate-500 mt-1">System overview and key operational metrics</p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
+            <p className="text-sm text-slate-500 mt-1">System overview and key operational metrics</p>
+          </div>
+          {data?.is_sample && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 border border-amber-300 px-3 py-1 text-xs font-semibold text-amber-800">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              Sample data
+            </span>
+          )}
         </div>
         <button
           onClick={handleRefresh}
