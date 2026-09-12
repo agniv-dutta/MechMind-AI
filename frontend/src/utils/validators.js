@@ -1,4 +1,4 @@
-export const SUPPORTED_UPLOAD_EXTENSIONS = ['.pdf', '.docx', '.doc', '.png', '.jpg', '.jpeg', '.tiff'];
+export const SUPPORTED_UPLOAD_EXTENSIONS = ['.pdf', '.docx', '.doc', '.md', '.markdown', '.png', '.jpg', '.jpeg', '.tiff'];
 export const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
 
 export function isSupportedFile(file) {

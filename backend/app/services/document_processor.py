@@ -71,7 +71,7 @@ class DocumentProcessor:
     
     def __init__(self):
         self.ocr_service = OCRService()
-        self.supported_types = ['pdf', 'docx', 'png', 'jpg', 'jpeg']
+        self.supported_types = ['pdf', 'docx', 'png', 'jpg', 'jpeg', 'md']
         self.max_file_size = settings.MAX_FILE_SIZE_MB * 1024 * 1024  # Convert to bytes
     
     def validate_file(self, file_path: str, file_type: str) -> bool:
@@ -117,6 +117,8 @@ class DocumentProcessor:
             self._process_pdf(file_path, processed_doc)
         elif file_type == 'docx':
             self._process_docx(file_path, processed_doc)
+        elif file_type == 'md':
+            self._process_markdown(file_path, processed_doc)
         elif file_type in ['png', 'jpg', 'jpeg']:
             self._process_image(file_path, processed_doc)
         else:
@@ -206,6 +208,45 @@ class DocumentProcessor:
                     
         except Exception as e:
             raise ValueError(f"Error processing DOCX: {str(e)}")
+
+    def _process_markdown(self, file_path: str, processed_doc: ProcessedDocument):
+        """Process Markdown document (plain text with headings and pipe tables)."""
+        try:
+            with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+                content = f.read()
+
+            page_num = 1
+            current_content = ""
+
+            for line in content.splitlines():
+                current_content += line + "\n"
+
+                # Simple page break detection (heuristic, mirrors DOCX handling)
+                if len(current_content) > 3000:
+                    page_text = current_content.strip()
+                    page_obj = Page(page_num, page_text)
+                    processed_doc.pages.append(page_obj)
+
+                    # Extract pipe/tab tables from the page
+                    tables = self._extract_tables_from_text(page_text, page_num)
+                    processed_doc.tables.extend(tables)
+
+                    current_content = ""
+                    page_num += 1
+
+            # Add remaining content
+            if current_content.strip():
+                page_obj = Page(page_num, current_content.strip())
+                processed_doc.pages.append(page_obj)
+                tables = self._extract_tables_from_text(page_obj.content, page_num)
+                processed_doc.tables.extend(tables)
+
+            # Fallback: if content was too short to form a page, emit one blank page
+            if not processed_doc.pages:
+                processed_doc.pages.append(Page(1, content.strip()))
+
+        except Exception as e:
+            raise ValueError(f"Error processing Markdown: {str(e)}")
     
     def _process_image(self, file_path: str, processed_doc: ProcessedDocument):
         """Process image document using OCR"""

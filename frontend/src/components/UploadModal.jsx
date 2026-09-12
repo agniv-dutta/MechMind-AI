@@ -163,7 +163,7 @@ export default function UploadModal({ isOpen, onClose, onUploaded }) {
               </p>
             </>
           )}
-          <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} accept=".pdf,.docx,.png,.jpg,.jpeg,.tiff" />
+          <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} accept=".pdf,.docx,.md,.markdown,.png,.jpg,.jpeg,.tiff" />
         </div>
 
         {/* 3. Processing Progress (active states) */}

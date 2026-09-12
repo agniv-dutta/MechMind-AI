@@ -75,7 +75,7 @@ async def upload_document(
     try:
         # Validate file type
         file_extension = file.filename.split('.')[-1].lower() if '.' in file.filename else ''
-        if file_extension not in ['pdf', 'docx', 'png', 'jpg', 'jpeg']:
+        if file_extension not in ['pdf', 'docx', 'md', 'png', 'jpg', 'jpeg']:
             raise HTTPException(status_code=400, detail=f"Unsupported file type: {file_extension}")
         
         # Create upload directory if it doesn't exist
