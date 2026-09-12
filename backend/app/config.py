@@ -1,7 +1,21 @@
 from pydantic_settings import BaseSettings
-from pydantic import Field, validator
+from pydantic import Field, validator, model_validator
 from typing import List
 import os
+
+# Backend root directory: backend/app/config.py -> backend/app -> backend
+# All file/data paths are anchored here so the app works from ANY working
+# directory (running uvicorn either from the repo root or the backend folder).
+_BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def _anchor_path(path: str) -> str:
+    """Resolve a possibly-relative path against the backend root."""
+    if not path:
+        return path
+    if os.path.isabs(path):
+        return os.path.normpath(path)
+    return os.path.normpath(os.path.join(_BACKEND_DIR, path))
 
 
 class Settings(BaseSettings):
@@ -120,9 +134,30 @@ class Settings(BaseSettings):
             print("WARNING: LLM_PROVIDER is 'groq' but GROQ_API_KEY is not set. "
                   "Chat/query endpoints will return a clear error until a key is configured.")
         return v
-    
+
+    @model_validator(mode='after')
+    def anchor_runtime_paths(self):
+        """Anchor every file/data path to the backend directory, regardless of where
+        uvicorn was launched from (repo root or the backend folder)."""
+        for field in (
+            'VECTOR_DB_PATH',
+            'UPLOAD_DIRECTORY',
+            'LOG_FILE',
+            'KNOWLEDGE_GRAPH_PATH',
+            'PAGE_CONTENT_PATH',
+            'SEARCH_CONFIG_PATH',
+        ):
+            setattr(self, field, _anchor_path(getattr(self, field)))
+
+        db = self.DATABASE_URL or ""
+        if db.startswith("sqlite:///./") or db.startswith("sqlite:///../"):
+            rel = db[len("sqlite:///../"):] if db.startswith("sqlite:///../") else db[len("sqlite:///./"):]
+            anchored = os.path.join(_BACKEND_DIR, rel).replace("\\", "/")
+            self.DATABASE_URL = f"sqlite:///{anchored}"
+        return self
+
     class Config:
-        env_file = ".env"
+        env_file = os.path.join(_BACKEND_DIR, ".env")
         env_file_encoding = "utf-8"
         case_sensitive = False
 
