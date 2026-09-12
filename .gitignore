@@ -57,6 +57,16 @@ backend/*.sqlite3
 backend/*.pkl
 backend/*.log
 
+# Root-level runtime data (app run from repo root)
+data/
+logs/
+uploads/
+industrial_troubleshooting.db
+*.sqlite
+*.sqlite3
+*.pkl
+app.log
+
 # Frontend dependencies and build output
 node_modules/
 frontend/node_modules/
@@ -70,3 +80,5 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+
+docs/
