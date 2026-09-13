@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, WebSocket, WebSocketDisconnect
+from websockets.exceptions import ConnectionClosed
 from typing import Optional
 from datetime import datetime
 
@@ -30,10 +31,10 @@ async def telegram_stream(
     try:
         async for frame in gateway.stream_sensor_data(equipment_id, baselines):
             await websocket.send_json(frame)
-    except WebSocketDisconnect:
-        pass
-    finally:
-        pass
+    except (WebSocketDisconnect, ConnectionClosed):
+        # Browser refreshes and network drops can close a socket without a close
+        # frame. Treat the resulting send failure as a normal disconnect.
+        return
 
 
 @router.get("/equipment")

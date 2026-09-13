@@ -1,5 +1,5 @@
-const CACHE_NAME = "mechmind-ai-v2";
-const APP_SHELL = ["/", "/favicon.svg", "/offline.html"];
+const CACHE_NAME = "mechmind-ai-v3";
+const APP_SHELL = ["/", "/favicon.svg?v=mechmind-1", "/offline.html"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
