@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, Request
 from fastapi.responses import JSONResponse
 from typing import Optional, List
 from datetime import datetime
@@ -8,6 +8,7 @@ import shutil
 import uuid
 
 from app.config import settings
+from app.cache import cache
 from app.schemas.document import (
     DocumentSchema, DocumentUploadSchema, DocumentUploadResponse,
     DocumentListResponse, DocumentDetailResponse, PageContentResponse,
@@ -141,6 +142,10 @@ async def upload_document(
         db.add(db_document)
         db.commit()
         db.refresh(db_document)
+
+        # Invalidate document list/detail caches so new uploads appear immediately.
+        await cache.delete_prefix("documents:list:")
+        await cache.delete_prefix("analytics:")
         
         # Add to vector store
         vector_store = VectorStore()
@@ -194,24 +199,28 @@ async def list_documents(
     equipment_type: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
-    """List all uploaded documents with pagination"""
-    try:
+    """List all uploaded documents with pagination (cached for 10s)."""
+    cache_key = (
+        f"documents:list:{skip}:{limit}:{sort_by}:{category or ''}:{equipment_type or ''}"
+    )
+
+    async def _build_list():
         query = db.query(Document)
-        
+
         # Apply filters
         if category:
             query = query.filter(Document.category == category)
         if equipment_type:
             query = query.filter(Document.equipment_type == equipment_type)
-        
+
         # Sort
         if hasattr(Document, sort_by):
             query = query.order_by(getattr(Document, sort_by).desc())
-        
+
         # Paginate
         total_count = query.count()
         documents = query.offset(skip).limit(limit).all()
-        
+
         # Map ORM rows to schema (field names differ from DB columns)
         from app.schemas.document import DocumentSchema
         document_schemas = []
@@ -231,36 +240,50 @@ async def list_documents(
                 chunks_count=doc.chunks_count or 0,
                 entities_found=0
             ))
-        
-        return DocumentListResponse(
+
+        result = DocumentListResponse(
             documents=document_schemas,
             total_count=total_count,
             skip=skip,
             limit=limit
         )
-        
+        # Store the already-serialized payload to avoid pickling ORM objects.
+        await cache.set(cache_key, result.model_dump(mode="json"), ttl=10)
+        return result
+
+    try:
+        cached = await cache.get(cache_key)
+        if cached is not None:
+            return DocumentListResponse(**cached)
+        return await _build_list()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error listing documents: {str(e)}")
 
 
 @router.get("/{document_id}", response_model=DocumentDetailResponse)
-async def get_document(document_id: str, db: Session = Depends(get_db)):
-    """Retrieve document details and content"""
-    try:
+async def get_document(document_id: str, request: Request, db: Session = Depends(get_db)):
+    """Retrieve document details and content (cached for 120s)."""
+    cache_key = f"documents:detail:{document_id}"
+
+    async def _build_detail():
         document = db.query(Document).filter(Document.id == document_id).first()
-        
+
         if not document:
             raise HTTPException(status_code=404, detail="Document not found")
-        
+
         # Build content preview from first persisted page if available
         content_preview = f"Document with {document.total_pages} pages"
         first_page = _load_page_content(document_id, 1)
         if first_page:
             content_preview = first_page[:1500]
-        
-        # Gather entities + relationships from the knowledge graph
-        kg_service = KnowledgeGraphService()
-        await kg_service.initialize()
+
+        # Gather entities + relationships from the knowledge graph.
+        # Reuse the long-lived service from app.state instead of re-initializing
+        # (initialization rescans persisted graph data on every request).
+        kg_service = getattr(request.app.state, "knowledge_graph", None)
+        if kg_service is None:
+            kg_service = KnowledgeGraphService()
+            await kg_service.initialize()
         entities = kg_service.get_entities_for_document(document_id)
         entity_list = [
             {
@@ -281,8 +304,8 @@ async def get_document(document_id: str, db: Session = Depends(get_db)):
             }
             for r in rels
         ]
-        
-        return DocumentDetailResponse(
+
+        result = DocumentDetailResponse(
             id=document.id,
             filename=document.filename,
             file_type=document.file_type,
@@ -301,7 +324,14 @@ async def get_document(document_id: str, db: Session = Depends(get_db)):
             uploaded_at=document.uploaded_at,
             processed_at=document.processed_at
         )
-        
+        await cache.set(cache_key, result.model_dump(mode="json"), ttl=120)
+        return result
+
+    try:
+        cached = await cache.get(cache_key)
+        if cached is not None:
+            return DocumentDetailResponse(**cached)
+        return await _build_detail()
     except HTTPException:
         raise
     except Exception as e:
@@ -336,6 +366,10 @@ async def delete_document(document_id: str, db: Session = Depends(get_db)):
         
         # Delete page content cache
         _delete_page_content(document_id)
+
+        # Invalidate document caches (list + detail + pages).
+        await cache.delete_prefix("documents:")
+        await cache.delete_prefix("analytics:")
         
         # Delete file from disk
         upload_dir = settings.resolve_upload_dir()
@@ -359,29 +393,38 @@ async def delete_document(document_id: str, db: Session = Depends(get_db)):
 
 @router.get("/{document_id}/pages/{page_num}", response_model=PageContentResponse)
 async def get_page_content(document_id: str, page_num: int, db: Session = Depends(get_db)):
-    """Get specific page content with OCR"""
-    try:
+    """Get specific page content with OCR (cached for 300s)."""
+    cache_key = f"documents:page:{document_id}:{page_num}"
+
+    async def _build_page():
         document = db.query(Document).filter(Document.id == document_id).first()
-        
+
         if not document:
             raise HTTPException(status_code=404, detail="Document not found")
-        
+
         if page_num < 1 or page_num > document.total_pages:
             raise HTTPException(status_code=400, detail="Invalid page number")
-        
+
         # Retrieve actual page content from persisted cache
         text_content = _load_page_content(document_id, page_num)
         if text_content is None:
             text_content = f"Content for page {page_num} of {document.filename} (not extracted)"
-        
-        return PageContentResponse(
+
+        result = PageContentResponse(
             page_number=page_num,
             text_content=text_content,
             image_url=None,
             tables=[],
             diagrams=[]
         )
-        
+        await cache.set(cache_key, result.model_dump(mode="json"), ttl=300)
+        return result
+
+    try:
+        cached = await cache.get(cache_key)
+        if cached is not None:
+            return PageContentResponse(**cached)
+        return await _build_page()
     except HTTPException:
         raise
     except Exception as e:

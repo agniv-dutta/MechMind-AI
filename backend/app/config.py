@@ -91,6 +91,12 @@ class Settings(BaseSettings):
     KNOWLEDGE_GRAPH_PATH: str = Field(default="./data/knowledge_graph.pkl", description="Path to persisted knowledge graph")
     PAGE_CONTENT_PATH: str = Field(default="./data/pages", description="Directory storing extracted per-page content")
 
+    # Caching Configuration (Prompt 9)
+    CACHE_ENABLED: bool = Field(default=True, description="Enable the application cache layer")
+    REDIS_URL: str = Field(default="", description="Optional Redis URL (e.g. redis://localhost:6379/0)")
+    CACHE_DOCS_TTL: int = Field(default=10, description="Documents list cache TTL in seconds")
+    CACHE_PAGE_TTL: int = Field(default=300, description="Page content cache TTL in seconds")
+
     # Security Configuration (Prompt 7)
     SECURITY_HEADERS_ENABLED: bool = Field(default=True, description="Attach security headers to responses")
     CONTENT_SECURITY_POLICY: str = Field(

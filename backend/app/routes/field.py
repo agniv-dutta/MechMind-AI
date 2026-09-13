@@ -1,12 +1,14 @@
 import io
 import os
 import zipfile
+import hashlib
 from typing import Optional, List
 
 from fastapi import APIRouter, HTTPException, Body, Depends
 from fastapi.responses import StreamingResponse
 
 from app.config import settings
+from app.cache import cache
 from app.models.database import Document, get_db
 from app.services.rag_service import RAGService
 from app.services.ai_service import AIService
@@ -80,8 +82,28 @@ async def quick_fix(
 
 @router.get("/offline-pack")
 async def offline_pack(db: Session = Depends(get_db)):
-    """Bundle all uploaded manuals into a downloadable zip for offline field use"""
-    documents = db.query(Document).all()
+    """Bundle all uploaded manuals into a downloadable zip for offline field use.
+
+    The zip is cached keyed by a fingerprint of the underlying documents so a
+    brand-new bundle is only zipped after an upload/delete changes the set.
+    """
+    documents = db.query(Document).order_by(Document.uploaded_at).all()
+
+    # Fingerprint = hashes of (id, updated_at) so cache auto-invalidates on change.
+    signature = hashlib.sha256()
+    for doc in documents:
+        signature.update(f"{doc.id}:{doc.updated_at or doc.uploaded_at}".encode("utf-8"))
+    sig = signature.hexdigest()
+    cache_key = f"documents:offline-pack:{sig}"
+
+    cached = await cache.get(cache_key)
+    if cached is not None:
+        return StreamingResponse(
+            io.BytesIO(cached),
+            media_type="application/zip",
+            headers={"Content-Disposition": "attachment; filename=mechmind_offline_pack.zip"},
+        )
+
     upload_dir = settings.resolve_upload_dir()
 
     in_memory = io.BytesIO()
@@ -104,10 +126,11 @@ async def offline_pack(db: Session = Depends(get_db)):
         )
         zf.writestr("MANIFEST.txt", manifest)
 
-    in_memory.seek(0)
-    headers = {"Content-Disposition": "attachment; filename=mechmind_offline_pack.zip"}
+    payload = in_memory.getvalue()
+    await cache.set(cache_key, payload, ttl=300)
+
     return StreamingResponse(
-        in_memory,
+        io.BytesIO(payload),
         media_type="application/zip",
-        headers=headers
+        headers={"Content-Disposition": "attachment; filename=mechmind_offline_pack.zip"},
     )

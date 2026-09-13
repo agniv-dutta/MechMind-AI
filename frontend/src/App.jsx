@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, Suspense, lazy } from 'react';
 import TopBar from './components/TopBar';
 import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
@@ -7,20 +7,33 @@ import UploadModal from './components/UploadModal';
 import WizardModal from './components/WizardModal';
 import SearchResults from './components/SearchResults';
 import DocumentLibrary from './components/DocumentLibrary';
-import DocumentDetails from './components/DocumentDetails';
-import KnowledgeGraph from './components/KnowledgeGraph';
-import AdvancedSearch from './components/AdvancedSearch';
 import GeneralSettings from './components/GeneralSettings';
 import AIConfiguration from './components/AIConfiguration';
 import SearchSettings from './components/SearchSettings';
 import DataPrivacy from './components/DataPrivacy';
 import HelpDocumentation from './components/HelpDocumentation';
 import LandingPage from './pages/LandingPage.jsx';
-import FieldAssistancePage from './pages/FieldAssistancePage.jsx';
-import DashboardPage from './pages/DashboardPage.jsx';
 import Toasts from './components/common/Toast.jsx';
 import { ErrorBoundary } from './components/common/ErrorBoundary.jsx';
 import { NotificationProvider } from './context/NotificationContext.jsx';
+
+// Heavy views are code-split + lazy-loaded so the initial bundle stays small
+// (grid/graph/recharts modules only ship when the matching page opens).
+const DashboardPage = lazy(() =>
+  import('./pages/DashboardPage.jsx').then((m) => ({ default: m.DashboardPage }))
+);
+const KnowledgeGraph = lazy(() => import('./components/KnowledgeGraph'));
+const AdvancedSearch = lazy(() => import('./components/AdvancedSearch'));
+const DocumentDetails = lazy(() => import('./components/DocumentDetails'));
+const FieldAssistancePage = lazy(() =>
+  import('./pages/FieldAssistancePage.jsx').then((m) => ({ default: m.FieldAssistancePage }))
+);
+
+const PageFallback = () => (
+  <div className="flex items-center justify-center h-full w-full">
+    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
+  </div>
+);
 
 export default function App() {
   const [activeNav, setActiveNav] = useState('landing'); // Landing page is the public entry; Login/Trial enters the dashboard
@@ -125,7 +138,8 @@ export default function App() {
           setActiveNav={navToPage}
         />
 
-        {/* Dynamic Page Views */}
+        {/* Dynamic Page Views (lazy-loaded chunks) */}
+        <Suspense fallback={<PageFallback />}>
         {activeNav === 'help' ? (
           <HelpDocumentation
             onBackToDashboard={() => setActiveNav('chat')}
@@ -210,6 +224,7 @@ export default function App() {
             />
           </>
         )}
+        </Suspense>
       </div>
 
       {/* Upload Technical Documentation Modal Overlay */}

@@ -103,7 +103,9 @@ app.add_middleware(
 # Security hardening middleware (Prompt 7) + Prometheus instrumentation (Prompt 10)
 from app.middleware.security import SecurityHeadersMiddleware, RateLimitMiddleware
 from app.monitoring.metrics import PrometheusMiddleware, metrics_endpoint
+from app.middleware.caching import CacheControlMiddleware
 
+app.add_middleware(CacheControlMiddleware)
 app.add_middleware(PrometheusMiddleware)
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
@@ -301,6 +303,14 @@ async def metrics():
         raise HTTPException(status_code=503, detail="prometheus_client is not installed")
     body, media_type = payload
     return Response(content=body, media_type=media_type)
+
+
+# Cache statistics (Prompt 9 debugging aid)
+@app.get("/api/system/cache-stats", include_in_schema=False)
+async def cache_stats():
+    from app.cache import cache
+    stats = await cache.stats()
+    return {"success": True, "data": stats}
 
 
 # Root endpoint
