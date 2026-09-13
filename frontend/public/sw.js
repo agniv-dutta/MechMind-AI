@@ -1,5 +1,5 @@
-const CACHE_NAME = "mechmind-ai-v1";
-const APP_SHELL = ["/", "/favicon.svg"];
+const CACHE_NAME = "mechmind-ai-v2";
+const APP_SHELL = ["/", "/favicon.svg", "/offline.html"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -29,7 +29,7 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put("/", copy));
           return response;
         })
-        .catch(() => caches.match("/"))
+        .catch(() => caches.match("/").then((cached) => cached || caches.match("/offline.html")))
     );
     return;
   }

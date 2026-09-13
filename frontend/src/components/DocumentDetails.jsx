@@ -14,9 +14,12 @@ import {
   Shield,
   Cpu,
   CircuitBoard,
-  Waypoints
+  Waypoints,
+  ScanSearch,
 } from 'lucide-react';
-import { getDocument, getDocumentPage, listDocuments, deleteDocument } from '../lib/api';
+import { getDocument, getDocumentPage, listDocuments, deleteDocument, analyzeDocumentDiagram } from '../lib/api';
+import { offlineStorage } from '../services/offlineStorage.js';
+import DiagramViewer from './DiagramViewer';
 
 const TYPE_ICONS = {
   Equipment: Printer,
@@ -36,6 +39,29 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
   const [pageLoading, setPageLoading] = useState(false);
   const [error, setError] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [diagram, setDiagram] = useState(null);
+  const [diagramLoading, setDiagramLoading] = useState(false);
+  const [diagramError, setDiagramError] = useState('');
+
+  const isImage = () => {
+    const type = (summary?.file_type || doc?.file_type || '').toLowerCase();
+    return ['png', 'jpg', 'jpeg', 'bmp', 'tiff', 'webp'].includes(type);
+  };
+
+  const handleAnalyzeDiagram = async () => {
+    if (!documentId) return;
+    setDiagramLoading(true);
+    setDiagramError('');
+    try {
+      const res = await analyzeDocumentDiagram(documentId);
+      setDiagram(res.diagram);
+    } catch (err) {
+      setDiagramError(err.message || 'Diagram analysis failed');
+      setDiagram(null);
+    } finally {
+      setDiagramLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!documentId) return;
@@ -62,11 +88,26 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
       .finally(() => setPageLoading(false));
   }, [documentId, activePage]);
 
+  // Cache document detail + page text into IndexedDB for offline field use.
+  useEffect(() => {
+    if (!doc || !summary) return;
+    offlineStorage
+      .saveDocument({
+        ...(summary || {}),
+        ...(doc || {}),
+        content: pageText || doc.content_preview || '',
+        content_preview: doc.content_preview || pageText?.slice(0, 400) || '',
+        cached_at: new Date().toISOString(),
+      })
+      .catch(() => {});
+  }, [doc, summary, pageText]);
+
   const handleDelete = async () => {
     if (!window.confirm(`Delete "${summary?.filename || doc?.filename}"? This cannot be undone.`)) return;
     setDeleting(true);
     try {
       await deleteDocument(documentId);
+      offlineStorage.deleteDocument(documentId).catch(() => {});
       if (onDelete) onDelete(documentId);
       else if (onBack) onBack();
     } catch (err) {
@@ -145,6 +186,17 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
+                {isImage() && (
+                  <button
+                    onClick={handleAnalyzeDiagram}
+                    disabled={diagramLoading}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-teal-500 hover:bg-teal-600 text-white text-xs font-bold transition-colors shadow-sm disabled:opacity-60"
+                    title="Run computer-vision diagram analysis on this image"
+                  >
+                    {diagramLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ScanSearch className="w-4 h-4" />}
+                    {diagramLoading ? 'Analyzing…' : 'Analyze Diagram'}
+                  </button>
+                )}
                 <div className={`text-xs px-3 py-1.5 rounded-full font-medium flex items-center gap-1.5 border ${
                   status === 'complete'
                     ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20'
@@ -349,8 +401,47 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
                     </div>
                   )}
                 </div>
-              </div>
+</div>
             </div>
-      </div>
-    );
+
+      {/* Diagram analysis */}
+      {isImage() && (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-slate-900 flex items-center gap-2">
+              <ScanSearch className="w-5 h-5 text-[#00897b]" />
+              Diagram Understanding
+            </h3>
+            {diagram && (
+              <span className="text-[10px] font-mono text-slate-400">
+                {diagram.type?.replaceAll('_', ' ')} · analyzed at {diagram.analyzed_at_html ? '—' : 'now'}
+              </span>
+            )}
+          </div>
+
+          {diagramError && (
+            <div className="flex items-start gap-2 text-xs text-red-600 bg-red-50 border border-red-100 rounded-xl p-3">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              {diagramError}
+            </div>
+          )}
+
+          {diagramLoading && (
+            <div className="flex items-center justify-center py-10 text-sm text-slate-500">
+              <Loader2 className="w-5 h-5 animate-spin text-teal-500 mr-2" />
+              Running computer-vision analysis — detecting components, connections and labels…
+            </div>
+          )}
+
+          {!diagramLoading && !diagramError && diagram && <DiagramViewer diagram={diagram} />}
+
+          {!diagramLoading && !diagramError && !diagram && (
+            <p className="text-sm text-slate-500 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
+              Click <span className="font-bold">Analyze Diagram</span> to extract components, connections and labels from this image using OpenCV.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }

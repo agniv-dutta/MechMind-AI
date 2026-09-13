@@ -161,7 +161,7 @@ export default function ChatArea({
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamError, setStreamError] = useState('');
-  const [offlineMode, setOfflineMode] = useState(false);
+  const [offlineMode, setOfflineMode] = useState(() => !navigator.onLine);
   const [sessionId, setSessionId] = useState('');
   const abortRef = useRef(null);
   const scrollRef = useRef(null);
@@ -171,6 +171,17 @@ export default function ChatArea({
   // Initialize Session
   useEffect(() => {
     setSessionId(`session-${Date.now().toString(36)}`);
+  }, []);
+
+  // Synchronize offline mode with browser connectivity (PWA offline support)
+  useEffect(() => {
+    const sync = () => setOfflineMode(!navigator.onLine);
+    window.addEventListener('online', sync);
+    window.addEventListener('offline', sync);
+    return () => {
+      window.removeEventListener('online', sync);
+      window.removeEventListener('offline', sync);
+    };
   }, []);
 
   const scrollToBottom = useCallback(() => {

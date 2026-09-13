@@ -1,0 +1,65 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "chat": "Chat",
+    "documents": "Documents",
+    "knowledge": "Knowledge Graph",
+    "field": "Field Assistance",
+    "help": "Help & Support",
+    "settings": "Settings"
+  },
+  "topbar": {
+    "search_placeholder": "Search system documentation & manuals...",
+    "wizard": "Troubleshooting Wizard",
+    "upload_docs": "Upload Docs"
+  },
+  "common": {
+    "back": "Back",
+    "delete": "Delete",
+    "search": "Search",
+    "export": "Export",
+    "refresh": "Refresh",
+    "cancel": "Cancel",
+    "save": "Save",
+    "loading": "Loading...",
+    "online": "Online",
+    "offline": "Offline"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "System overview and key operational metrics"
+  },
+  "documents": {
+    "title": "Documents",
+    "subtitle": "Browse, search and manage your technical documentation",
+    "upload": "Upload Document"
+  },
+  "chat": {
+    "title": "AI Chat Assistant",
+    "subtitle": "Ask questions about your equipment and documentation"
+  },
+  "knowledge": {
+    "title": "Knowledge Graph",
+    "subtitle": "Explore entities and relationships extracted from your documents"
+  },
+  "field": {
+    "title": "Quick Troubleshooting",
+    "subtitle": "Field assistant for on-location diagnostics",
+    "whats_wrong": "What's wrong?",
+    "symptom_placeholder": "Describe the symptom...",
+    "get_fix": "Get Quick Fix",
+    "diagnosing": "Diagnosing...",
+    "offline_manual": "Offline manual",
+    "call_support": "Call support",
+    "share": "Share",
+    "offline_mode": "Offline — using cached data",
+    "online_mode": "Online",
+    "offline_banner": "Offline mode: answers use cached manuals and field fixes. Results sync when you're back online.",
+    "quick_search": "Quick search ({{count}} cached docs)",
+    "search_placeholder": "Search cached manuals (pump, motor, valve…)",
+    "no_cached_match": "No cached documents match"
+  },
+  "settings": {
+    "title": "Settings"
+  }
+}

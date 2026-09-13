@@ -1,0 +1,65 @@
+{
+  "nav": {
+    "dashboard": "仪表盘",
+    "chat": "聊天",
+    "documents": "文档",
+    "knowledge": "知识图谱",
+    "field": "现场协助",
+    "help": "帮助与支持",
+    "settings": "设置"
+  },
+  "topbar": {
+    "search_placeholder": "搜索系统文档与手册...",
+    "wizard": "故障排查向导",
+    "upload_docs": "上传文档"
+  },
+  "common": {
+    "back": "返回",
+    "delete": "删除",
+    "search": "搜索",
+    "export": "导出",
+    "refresh": "刷新",
+    "cancel": "取消",
+    "save": "保存",
+    "loading": "加载中...",
+    "online": "在线",
+    "offline": "离线"
+  },
+  "dashboard": {
+    "title": "仪表盘",
+    "subtitle": "系统概览与关键运行指标"
+  },
+  "documents": {
+    "title": "文档",
+    "subtitle": "浏览、搜索并管理您的技术文档",
+    "upload": "上传文档"
+  },
+  "chat": {
+    "title": "AI 聊天助手",
+    "subtitle": "询问有关设备与文档的问题"
+  },
+  "knowledge": {
+    "title": "知识图谱",
+    "subtitle": "探索从文档中提取的实体与关系"
+  },
+  "field": {
+    "title": "快速故障排查",
+    "subtitle": "现场诊断助手",
+    "whats_wrong": "出现什么问题？",
+    "symptom_placeholder": "描述症状...",
+    "get_fix": "获取快速修复",
+    "diagnosing": "正在诊断...",
+    "offline_manual": "离线手册",
+    "call_support": "呼叫支持",
+    "share": "分享",
+    "offline_mode": "离线 — 正在使用缓存数据",
+    "online_mode": "在线",
+    "offline_banner": "离线模式：回答使用缓存的故障手册，恢复联网后自动同步。",
+    "quick_search": "快速搜索（{{count}} 个缓存文档）",
+    "search_placeholder": "搜索缓存手册（泵、电机、阀门…）",
+    "no_cached_match": "没有匹配的缓存文档"
+  },
+  "settings": {
+    "title": "设置"
+  }
+}

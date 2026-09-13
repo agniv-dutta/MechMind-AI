@@ -1,0 +1,65 @@
+{
+  "nav": {
+    "dashboard": "Panel",
+    "chat": "Chat",
+    "documents": "Documentos",
+    "knowledge": "Grafo de conocimiento",
+    "field": "Asistencia de campo",
+    "help": "Ayuda y soporte",
+    "settings": "Ajustes"
+  },
+  "topbar": {
+    "search_placeholder": "Buscar documentación y manuales del sistema...",
+    "wizard": "Asistente de diagnóstico",
+    "upload_docs": "Subir documentos"
+  },
+  "common": {
+    "back": "Volver",
+    "delete": "Eliminar",
+    "search": "Buscar",
+    "export": "Exportar",
+    "refresh": "Actualizar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "loading": "Cargando...",
+    "online": "En línea",
+    "offline": "Sin conexión"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "subtitle": "Resumen del sistema y métricas operativas clave"
+  },
+  "documents": {
+    "title": "Documentos",
+    "subtitle": "Examine, busque y gestione su documentación técnica",
+    "upload": "Subir documento"
+  },
+  "chat": {
+    "title": "Asistente de chat IA",
+    "subtitle": "Haga preguntas sobre sus equipos y documentación"
+  },
+  "knowledge": {
+    "title": "Grafo de conocimiento",
+    "subtitle": "Explore entidades y relaciones extraídas de sus documentos"
+  },
+  "field": {
+    "title": "Solución rápida de problemas",
+    "subtitle": "Asistente de campo para diagnósticos en sitio",
+    "whats_wrong": "¿Qué problema hay?",
+    "symptom_placeholder": "Describa el síntoma...",
+    "get_fix": "Obtener solución rápida",
+    "diagnosing": "Diagnosticando...",
+    "offline_manual": "Manual sin conexión",
+    "call_support": "Llamar soporte",
+    "share": "Compartir",
+    "offline_mode": "Sin conexión — usando datos en caché",
+    "online_mode": "En línea",
+    "offline_banner": "Modo sin conexión: las respuestas usan manuales en caché. Se sincronizarán al volver a conectarse.",
+    "quick_search": "Búsqueda rápida ({{count}} documentos en caché)",
+    "search_placeholder": "Buscar manuales en caché (bomba, motor, válvula…)",
+    "no_cached_match": "Ningún documento en caché coincide"
+  },
+  "settings": {
+    "title": "Ajustes"
+  }
+}

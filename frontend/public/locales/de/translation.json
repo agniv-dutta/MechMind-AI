@@ -1,0 +1,65 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "chat": "Chat",
+    "documents": "Dokumente",
+    "knowledge": "Wissensgraph",
+    "field": "Vor-Ort-Unterstützung",
+    "help": "Hilfe & Support",
+    "settings": "Einstellungen"
+  },
+  "topbar": {
+    "search_placeholder": "Systemdokumentation & Handbücher durchsuchen...",
+    "wizard": "Diagnose-Assistent",
+    "upload_docs": "Dokumente hochladen"
+  },
+  "common": {
+    "back": "Zurück",
+    "delete": "Löschen",
+    "search": "Suchen",
+    "export": "Exportieren",
+    "refresh": "Aktualisieren",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "loading": "Lädt...",
+    "online": "Online",
+    "offline": "Offline"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Systemübersicht und wichtige Betriebskennzahlen"
+  },
+  "documents": {
+    "title": "Dokumente",
+    "subtitle": "Technische Dokumentation durchsuchen, finden und verwalten",
+    "upload": "Dokument hochladen"
+  },
+  "chat": {
+    "title": "KI-Chat-Assistent",
+    "subtitle": "Stellen Sie Fragen zu Ausrüstung und Dokumentation"
+  },
+  "knowledge": {
+    "title": "Wissensgraph",
+    "subtitle": "Erkunden Sie aus Dokumenten extrahierte Entitäten und Beziehungen"
+  },
+  "field": {
+    "title": "Schnelle Fehlerbehebung",
+    "subtitle": "Feldassistent für Diagnosen vor Ort",
+    "whats_wrong": "Was ist das Problem?",
+    "symptom_placeholder": "Symptom beschreiben...",
+    "get_fix": "Schnelle Lösung",
+    "diagnosing": "Diagnose läuft...",
+    "offline_manual": "Offline-Handbuch",
+    "call_support": "Support anrufen",
+    "share": "Teilen",
+    "offline_mode": "Offline — Cachedaten werden verwendet",
+    "online_mode": "Online",
+    "offline_banner": "Offline-Modus: Antworten verwenden zwischengespeicherte Handbücher. Sie werden nach der Rückkehr synchronisiert.",
+    "quick_search": "Schnellsuche ({{count}} Dokumente im Cache)",
+    "search_placeholder": "Cachesuche in Handbüchern (Pumpe, Motor, Ventil…)",
+    "no_cached_match": "Keine übereinstimmenden zwischengespeicherten Dokumente"
+  },
+  "settings": {
+    "title": "Einstellungen"
+  }
+}

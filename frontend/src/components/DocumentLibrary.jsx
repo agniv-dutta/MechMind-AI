@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Search, 
   Filter, 
@@ -15,6 +16,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { listDocuments } from '../lib/api';
+import { offlineStorage } from '../services/offlineStorage.js';
 
 const TYPE_META = {
   'Service Manual': { bg: 'from-slate-950 via-slate-900 to-blue-950', dot: 'bg-blue-600', label: 'MANUAL // REV' },
@@ -66,12 +68,19 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument }) {
   const [searchVal, setSearchVal] = useState('');
   const [docs, setDocs] = useState(null);
   const [error, setError] = useState('');
+  const { t } = useTranslation();
 
   const load = () => {
     setDocs(null);
     setError('');
     listDocuments({ limit: 100 })
-      .then((res) => setDocs(res.documents || []))
+      .then((res) => {
+        const documents = res.documents || [];
+        setDocs(documents);
+        offlineStorage
+          .saveDocuments(documents.map((d) => ({ ...d, cached_at: new Date().toISOString() })))
+          .catch(() => {});
+      })
       .catch((err) => { setError(err.message || 'Failed to load documents'); setDocs([]); });
   };
 
@@ -161,7 +170,7 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument }) {
             className="bg-emerald-800 hover:bg-emerald-900 text-white font-medium px-4 py-2 rounded-lg text-sm flex items-center gap-2 shadow-sm transition-all"
           >
             <Upload className="w-4 h-4" />
-            <span>Upload Document</span>
+            <span>{t('documents.upload')}</span>
           </button>
         </div>
 

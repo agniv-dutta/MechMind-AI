@@ -1,0 +1,65 @@
+{
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "chat": "Chat",
+    "documents": "Documents",
+    "knowledge": "Graphe de connaissances",
+    "field": "Assistance terrain",
+    "help": "Aide et support",
+    "settings": "Paramètres"
+  },
+  "topbar": {
+    "search_placeholder": "Rechercher documentation et manuels système...",
+    "wizard": "Assistant de diagnostic",
+    "upload_docs": "Téléverser des docs"
+  },
+  "common": {
+    "back": "Retour",
+    "delete": "Supprimer",
+    "search": "Rechercher",
+    "export": "Exporter",
+    "refresh": "Actualiser",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "loading": "Chargement...",
+    "online": "En ligne",
+    "offline": "Hors ligne"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "subtitle": "Vue d'ensemble du système et indicateurs opérationnels clés"
+  },
+  "documents": {
+    "title": "Documents",
+    "subtitle": "Parcourez, recherchez et gérez votre documentation technique",
+    "upload": "Téléverser un document"
+  },
+  "chat": {
+    "title": "Assistant de chat IA",
+    "subtitle": "Posez des questions sur vos équipements et votre documentation"
+  },
+  "knowledge": {
+    "title": "Graphe de connaissances",
+    "subtitle": "Explorez les entités et relations extraites de vos documents"
+  },
+  "field": {
+    "title": "Dépannage rapide",
+    "subtitle": "Assistant terrain pour diagnostics sur site",
+    "whats_wrong": "Quel est le problème ?",
+    "symptom_placeholder": "Décrire le symptôme...",
+    "get_fix": "Obtenir une solution rapide",
+    "diagnosing": "Diagnostic en cours...",
+    "offline_manual": "Manuel hors ligne",
+    "call_support": "Appeler le support",
+    "share": "Partager",
+    "offline_mode": "Hors ligne — données en cache utilisées",
+    "online_mode": "En ligne",
+    "offline_banner": "Mode hors ligne : les réponses utilisent les manuels en cache. Synchronisation au retour en ligne.",
+    "quick_search": "Recherche rapide ({{count}} docs en cache)",
+    "search_placeholder": "Rechercher dans les manuels en cache (pompe, moteur, vanne…)",
+    "no_cached_match": "Aucun document en cache ne correspond"
+  },
+  "settings": {
+    "title": "Paramètres"
+  }
+}

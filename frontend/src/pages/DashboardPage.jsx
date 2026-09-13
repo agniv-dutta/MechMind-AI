@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Activity, FileText, Network, MessageSquare, AlertCircle,
   CheckCircle, Clock, Loader2, RefreshCw, Wrench, Cpu, Download,
@@ -13,6 +14,7 @@ import TelemetryPanel from '../components/TelemetryPanel.jsx';
 
 export function DashboardPage() {
   const { notify } = useNotifications();
+  const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [timeline, setTimeline] = useState([]);
   const [equipment, setEquipment] = useState([]);
@@ -40,7 +42,10 @@ export function DashboardPage() {
     }
   }, [notify]);
 
-  useEffect(() => { loadAll(); }, [loadAll]);
+  useEffect(() => {
+    const t = setTimeout(loadAll, 0);
+    return () => clearTimeout(t);
+  }, [loadAll]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -57,8 +62,8 @@ export function DashboardPage() {
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-            <p className="text-sm text-slate-500 mt-1">System overview and key operational metrics</p>
+            <h1 className="text-3xl font-bold text-slate-900">{t('dashboard.title')}</h1>
+            <p className="text-sm text-slate-500 mt-1">{t('dashboard.subtitle')}</p>
           </div>
           {data?.is_sample && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 border border-amber-300 px-3 py-1 text-xs font-semibold text-amber-800">

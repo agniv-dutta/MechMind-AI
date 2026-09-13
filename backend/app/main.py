@@ -13,7 +13,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.config import settings
-from app.routes import documents, chat, search, knowledge_graph, ai, field, analytics, predictive, telemetry, reports
+from app.routes import documents, chat, search, knowledge_graph, ai, field, analytics, predictive, telemetry, reports, diagrams
 from app.utils.logger import setup_logging
 
 # ── Structured JSON logging ──────────────────────────────────────────
@@ -290,6 +290,7 @@ app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"]
 app.include_router(predictive.router, prefix="/api/predictive", tags=["predictive"])
 app.include_router(telemetry.router)
 app.include_router(reports.router)
+app.include_router(diagrams.router)
 
 
 # Metrics endpoint (Prometheus scrape target)

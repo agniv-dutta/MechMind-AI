@@ -1,6 +1,8 @@
 import os
 import hashlib
 import json
+import asyncio
+import logging
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import uuid
@@ -12,6 +14,8 @@ import numpy as np
 
 from app.config import settings
 from app.services.ocr_service import OCRService
+
+logger = logging.getLogger(__name__)
 
 
 class Page:
@@ -259,6 +263,22 @@ class DocumentProcessor:
             
         except Exception as e:
             raise ValueError(f"Error processing image: {str(e)}")
+        
+        # Advanced diagram understanding (CV) - never fails the upload.
+        try:
+            diagram_analysis = self._analyze_image_diagram(file_path)
+            if diagram_analysis:
+                page_obj.diagrams.append(diagram_analysis)
+                processed_doc.diagrams.append(diagram_analysis)
+        except Exception as exc:
+            logger.warning("Diagram analysis skipped for %s: %s", file_path, exc)
+    
+    def _analyze_image_diagram(self, file_path: str) -> Optional[Dict[str, Any]]:
+        """Run the OpenCV diagram analyzer on an image (best-effort)."""
+        from app.services.diagram_analyzer import AdvancedDiagramAnalyzer
+
+        analyzer = AdvancedDiagramAnalyzer()
+        return asyncio.run(analyzer.analyze_diagram(file_path))
     
     def _extract_tables_from_text(self, text: str, page_number: int) -> List[Table]:
         """Extract tables from text content (simple heuristic-based approach)"""

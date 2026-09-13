@@ -303,3 +303,27 @@ export function getTelemetryCurrent(equipmentId) {
 export function getReportUrl(route) {
   return `${BASE_URL}${route}`;
 }
+
+export function analyzeDocumentDiagram(documentId) {
+  return request(`/api/diagrams/analyze-document/${encodeURIComponent(documentId)}`, {
+    method: 'POST',
+  });
+}
+
+export function uploadDiagram(file) {
+  const form = new FormData();
+  form.append('file', file);
+  return request('/api/diagrams/analyze', { method: 'POST', body: form });
+}
+
+export function getDiagramAnalyses() {
+  return request('/api/diagrams/analyses').then((r) => r.results || []);
+}
+
+export function searchDiagrams({ componentType, diagramType } = {}) {
+  const params = new URLSearchParams();
+  if (componentType) params.append('component_type', componentType);
+  if (diagramType) params.append('diagram_type', diagramType);
+  const qs = params.toString();
+  return request(`/api/diagrams/search${qs ? `?${qs}` : ''}`).then((r) => r.results || []);
+}

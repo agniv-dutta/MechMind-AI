@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
   MessageSquare,
@@ -12,14 +13,15 @@ import {
 } from 'lucide-react';
 
 const NAV_ITEMS = [
-  { id: 'dashboard',  label: 'Dashboard',       icon: LayoutDashboard },
-  { id: 'chat',       label: 'Chat',             icon: MessageSquare,   badge: 'Live' },
-  { id: 'documents',  label: 'Documents',        icon: FileText },
-  { id: 'knowledge',  label: 'Knowledge Graph',  icon: Network },
-  { id: 'field_page', label: 'Field Assistance', icon: Wrench },
+  { id: 'dashboard',  labelKey: 'nav.dashboard',       icon: LayoutDashboard },
+  { id: 'chat',       labelKey: 'nav.chat',             icon: MessageSquare,   badge: 'Live' },
+  { id: 'documents',  labelKey: 'nav.documents',        icon: FileText },
+  { id: 'knowledge',  labelKey: 'nav.knowledge',        icon: Network },
+  { id: 'field_page', labelKey: 'nav.field', icon: Wrench },
 ];
 
 export default function Sidebar({ activeNav, setActiveNav }) {
+  const { t } = useTranslation();
   const isActive = (id) => activeNav === id;
 
   const itemBase = {
@@ -69,7 +71,9 @@ export default function Sidebar({ activeNav, setActiveNav }) {
     >
       {/* ── Top Navigation Links ───────────────────────────────────── */}
       <div style={{ paddingTop: '12px' }}>
-        {NAV_ITEMS.map(({ id, label, icon: Icon, badge }) => (
+        {NAV_ITEMS.map(({ id, labelKey, icon: Icon, badge }) => {
+          const label = t(labelKey);
+          return (
           <button
             key={id}
             onClick={() => setActiveNav(id)}
@@ -118,7 +122,8 @@ export default function Sidebar({ activeNav, setActiveNav }) {
               </span>
             )}
           </button>
-        ))}
+          );
+        })}
       </div>
 
       {/* ── Bottom Section ────────────────────────────────────── */}
@@ -207,7 +212,7 @@ export default function Sidebar({ activeNav, setActiveNav }) {
           }}
         >
           <HelpCircle style={{ width: '18px', height: '18px', flexShrink: 0, color: isActive('help') ? '#00acc1' : '#64748b' }} />
-          <span style={{ flex: 1 }}>Help & Support</span>
+          <span style={{ flex: 1 }}>{t('nav.help')}</span>
         </button>
 
         {/* Settings Link */}
@@ -234,7 +239,7 @@ export default function Sidebar({ activeNav, setActiveNav }) {
           }}
         >
           <Settings style={{ width: '18px', height: '18px', flexShrink: 0, color: isActive('settings') ? '#00acc1' : '#64748b' }} />
-          <span style={{ flex: 1 }}>Settings</span>
+          <span style={{ flex: 1 }}>{t('nav.settings')}</span>
           <ChevronRight style={{ width: '14px', height: '14px', color: '#94a3b8' }} />
         </button>
       </div>

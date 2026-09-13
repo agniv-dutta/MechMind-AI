@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Search,
   Cpu,
@@ -6,6 +7,7 @@ import {
   Upload,
   Sparkles,
 } from 'lucide-react';
+import LanguageSwitcher from './LanguageSwitcher';
 
 export default function TopBar({
   searchQuery,
@@ -13,6 +15,7 @@ export default function TopBar({
   onOpenUpload,
   onOpenWizard,
 }) {
+  const { t } = useTranslation();
   return (
     <header
       className="topbar flex items-center justify-between shrink-0 z-20"
@@ -63,7 +66,7 @@ export default function TopBar({
             aria-label="Search system documentation and manuals"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search system documentation & manuals..."
+            placeholder={t('topbar.search_placeholder')}
             className="w-full focus:outline-none transition-all"
             style={{
               height: '36px',
@@ -116,7 +119,7 @@ export default function TopBar({
           }}
         >
           <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-          <span>Troubleshooting Wizard</span>
+          <span>{t('topbar.wizard')}</span>
         </button>
 
         {/* Upload Button */}
@@ -139,8 +142,11 @@ export default function TopBar({
           }}
         >
           <Upload className="w-3.5 h-3.5" />
-          <span>Upload Docs</span>
+          <span>{t('topbar.upload_docs')}</span>
         </button>
+
+        {/* Language switcher */}
+        <LanguageSwitcher />
 
         {/* User avatar + name */}
         <div
