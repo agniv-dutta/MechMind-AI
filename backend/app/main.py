@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from contextlib import asynccontextmanager
 import logging
 from datetime import datetime
@@ -13,7 +13,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.config import settings
-from app.routes import documents, chat, search, knowledge_graph, ai, field, analytics, predictive
+from app.routes import documents, chat, search, knowledge_graph, ai, field, analytics, predictive, telemetry, reports
 from app.utils.logger import setup_logging
 
 # ── Structured JSON logging ──────────────────────────────────────────
@@ -99,6 +99,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Security hardening middleware (Prompt 7) + Prometheus instrumentation (Prompt 10)
+from app.middleware.security import SecurityHeadersMiddleware, RateLimitMiddleware
+from app.monitoring.metrics import PrometheusMiddleware, metrics_endpoint
+
+app.add_middleware(PrometheusMiddleware)
+app.add_middleware(RateLimitMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
 
 
 # Request logging middleware with request IDs
@@ -280,6 +288,18 @@ app.include_router(ai.router, prefix="/api/ai", tags=["ai"])
 app.include_router(field.router, prefix="/api/field", tags=["field"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
 app.include_router(predictive.router, prefix="/api/predictive", tags=["predictive"])
+app.include_router(telemetry.router)
+app.include_router(reports.router)
+
+
+# Metrics endpoint (Prometheus scrape target)
+@app.get("/metrics", include_in_schema=False)
+async def metrics():
+    payload = metrics_endpoint()
+    if payload is None:
+        raise HTTPException(status_code=503, detail="prometheus_client is not installed")
+    body, media_type = payload
+    return Response(content=body, media_type=media_type)
 
 
 # Root endpoint

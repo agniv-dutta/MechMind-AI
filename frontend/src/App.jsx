@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import TopBar from './components/TopBar';
 import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
@@ -65,6 +65,26 @@ export default function App() {
     else setActiveNav(id);
   };
 
+  // Keyboard shortcuts (Ctrl+K focus global search, Alt+H open help)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        document.getElementById('global-search-input')?.focus();
+      } else if (e.altKey && (e.key === 'h' || e.key === 'H')) {
+        e.preventDefault();
+        setActiveNav('help');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const skipToContent = useCallback((e) => {
+    e.preventDefault();
+    document.getElementById('main-content')?.focus();
+  }, []);
+
   // Standalone marketing landing page (per landing_page_implementation.md)
   if (activeNav === 'landing') {
     return (
@@ -78,6 +98,14 @@ export default function App() {
   return (
     <NotificationProvider>
     <div className="min-h-screen h-screen flex flex-col bg-slate-50 text-slate-900 overflow-hidden font-sans transition-colors duration-200" style={{ backgroundColor: '#f8fafc' }}>
+      {/* Skip-to-content link for keyboard / screen reader users */}
+      <a
+        href="#main-content"
+        onClick={skipToContent}
+        className="skip-link"
+      >
+        Skip to main content
+      </a>
       {/* Top Header Bar */}
       <TopBar 
         searchQuery={searchQuery}
@@ -90,7 +118,7 @@ export default function App() {
       />
 
       {/* Main Workspace Container */}
-      <div className="flex-1 flex flex-row overflow-hidden w-full relative">
+      <div id="main-content" tabIndex={-1} className="flex-1 flex flex-row overflow-hidden w-full relative" role="main">
         {/* Left Navigation Sidebar */}
         <Sidebar 
           activeNav={activeNav === 'doc_details' ? 'documents' : activeNav === 'adv_search' ? 'search' : activeNav === 'ai' || activeNav === 'search_settings' || activeNav === 'data' || activeNav === 'settings' ? 'settings' : activeNav} 

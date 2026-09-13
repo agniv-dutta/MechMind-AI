@@ -1,14 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Activity, FileText, Network, MessageSquare, AlertCircle,
-  CheckCircle, Clock, Loader2, RefreshCw, Wrench, Cpu,
+  CheckCircle, Clock, Loader2, RefreshCw, Wrench, Cpu, Download,
 } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
 } from 'recharts';
-import { getDashboardMetrics, getAnalyticsTimeline, getEquipmentTypes, getEquipmentStatus } from '../lib/api';
+import { getDashboardMetrics, getAnalyticsTimeline, getEquipmentTypes, getEquipmentStatus, getReportUrl } from '../lib/api';
 import { useNotifications } from '../context/NotificationContext.jsx';
+import TelemetryPanel from '../components/TelemetryPanel.jsx';
 
 export function DashboardPage() {
   const { notify } = useNotifications();
@@ -150,6 +151,11 @@ export function DashboardPage() {
             </div>
           </div>
 
+          {/* Live Telemetry */}
+          <TelemetryPanel
+            initialEquipmentId={predictive[0]?.equipment_id || 'COMPRESSOR-C-102'}
+          />
+
           {/* Predictive Maintenance */}
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-2xs">
             <div className="flex items-center justify-between mb-4">
@@ -157,9 +163,25 @@ export function DashboardPage() {
                 <Wrench className="w-5 h-5 text-[#00897b]" />
                 <h3 className="font-bold text-slate-900 text-base">Predictive Maintenance</h3>
               </div>
-              <span className="text-xs font-medium text-slate-400">
-                RandomForest RUL + anomaly detection
-              </span>
+              <div className="flex items-center gap-2">
+                <a
+                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                  href={getReportUrl('/api/reports/equipment-status?format=xlsx')}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Export XLSX
+                </a>
+                <a
+                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                  href={getReportUrl('/api/reports/equipment-status?format=csv')}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  CSV
+                </a>
+                <span className="text-xs font-medium text-slate-400">
+                  RandomForest RUL + anomaly detection
+                </span>
+              </div>
             </div>
             {predictive.length === 0 ? (
               <p className="text-sm text-slate-400 py-8 text-center">
@@ -176,6 +198,7 @@ export function DashboardPage() {
                       <th className="pb-2 pr-3">Confidence</th>
                       <th className="pb-2 pr-3">Anomalies</th>
                       <th className="pb-2">Suggested Action</th>
+                      <th className="pb-2 pl-3 text-right">Report</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -201,7 +224,17 @@ export function DashboardPage() {
                             {Math.round((row.confidence || 0) * 100)}%
                           </td>
                           <td className="py-2.5 pr-3 text-slate-600">{row.anomalies_detected || 0}</td>
-                          <td className="py-2.5 text-slate-600">{row.recommended_action}</td>
+                          <td className="py-2.5 pr-3 text-slate-600">{row.recommended_action}</td>
+                          <td className="py-2.5 text-right">
+                            <a
+                              aria-label={`Download maintenance report for ${row.equipment_id}`}
+                              className="inline-flex items-center justify-center rounded-lg border border-slate-200 p-2 text-slate-500 hover:bg-slate-50 hover:text-[#00897b] transition-colors"
+                              href={getReportUrl(`/api/reports/maintenance/${encodeURIComponent(row.equipment_id)}?format=pdf`)}
+                              title={`Download PDF report for ${row.equipment_id}`}
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                            </a>
+                          </td>
                         </tr>
                       )
                     )}

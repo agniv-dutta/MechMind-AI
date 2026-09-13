@@ -291,3 +291,15 @@ export function getPredictions({ equipmentId, limit = 20 } = {}) {
   if (equipmentId) params.append('equipment_id', equipmentId);
   return request(`/api/predictive/predictions?${params.toString()}`).then((r) => r.data);
 }
+
+export function getTelemetryEquipment() {
+  return request('/api/telemetry/equipment').then((r) => r.data);
+}
+
+export function getTelemetryCurrent(equipmentId) {
+  return request(`/api/telemetry/${encodeURIComponent(equipmentId)}/current`).then((r) => r.data);
+}
+
+export function getReportUrl(route) {
+  return `${BASE_URL}${route}`;
+}

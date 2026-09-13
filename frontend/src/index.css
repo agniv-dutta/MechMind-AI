@@ -2,6 +2,29 @@
 
 /* ── Light-mode only: no dark variants ───────────────────────────────────── */
 
+/* ── Accessibility (Prompt 5): skip link + visible focus ────────────────── */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 9999;
+  padding: 10px 16px;
+  background: #0d9488;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  border-radius: 0 0 8px 0;
+}
+.skip-link:focus {
+  left: 0;
+}
+
+:focus-visible {
+  outline: 2px solid #00897b;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 @layer base {
   :root {
     /* ── Brand Colors (from ui-demo screenshots) ─────────────────────── */

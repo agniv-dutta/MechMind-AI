@@ -73,6 +73,8 @@ export default function Sidebar({ activeNav, setActiveNav }) {
           <button
             key={id}
             onClick={() => setActiveNav(id)}
+            aria-current={isActive(id) ? 'page' : undefined}
+            aria-label={label}
             style={{
               ...itemBase,
               ...(isActive(id) ? activeStyle : inactiveStyle),
@@ -185,6 +187,8 @@ export default function Sidebar({ activeNav, setActiveNav }) {
         {/* Help Link */}
         <button
           onClick={() => setActiveNav('help')}
+          aria-current={isActive('help') ? 'page' : undefined}
+          aria-label="Help and support"
           style={{
             ...itemBase,
             ...(isActive('help') ? activeStyle : inactiveStyle),
@@ -209,6 +213,8 @@ export default function Sidebar({ activeNav, setActiveNav }) {
         {/* Settings Link */}
         <button
           onClick={() => setActiveNav('settings')}
+          aria-current={isActive('settings') ? 'page' : undefined}
+          aria-label="Settings"
           style={{
             ...itemBase,
             ...(isActive('settings') ? activeStyle : inactiveStyle),

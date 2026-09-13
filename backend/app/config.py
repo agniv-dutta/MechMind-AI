@@ -91,6 +91,19 @@ class Settings(BaseSettings):
     KNOWLEDGE_GRAPH_PATH: str = Field(default="./data/knowledge_graph.pkl", description="Path to persisted knowledge graph")
     PAGE_CONTENT_PATH: str = Field(default="./data/pages", description="Directory storing extracted per-page content")
 
+    # Security Configuration (Prompt 7)
+    SECURITY_HEADERS_ENABLED: bool = Field(default=True, description="Attach security headers to responses")
+    CONTENT_SECURITY_POLICY: str = Field(
+        default=(
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data: blob:; connect-src 'self' ws: wss:; "
+            "frame-ancestors 'none'; base-uri 'self'; object-src 'none'"
+        ),
+        description="Content-Security-Policy header value",
+    )
+    RATE_LIMIT_ENABLED: bool = Field(default=True, description="Enable per-client API rate limiting")
+    RATE_LIMIT_PER_MINUTE: int = Field(default=120, ge=1, description="Max API requests per client per minute")
+
     @property
     def groq_models_list(self) -> List[str]:
         """Available Groq models as a list"""

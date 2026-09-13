@@ -59,6 +59,8 @@ export default function TopBar({
           </div>
           <input
             type="text"
+            id="global-search-input"
+            aria-label="Search system documentation and manuals"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search system documentation & manuals..."
@@ -86,6 +88,7 @@ export default function TopBar({
           <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
             <kbd
               className="text-white/40 font-mono bg-white/10 px-1.5 py-0.5 rounded text-[10px]"
+              aria-hidden="true"
             >
               ⌘K
             </kbd>
@@ -98,6 +101,7 @@ export default function TopBar({
         {/* Troubleshooting Wizard Action Button */}
         <button
           onClick={onOpenWizard}
+          aria-label="Open troubleshooting wizard"
           className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm"
           style={{
             background: 'rgba(255,255,255,0.12)',
@@ -118,6 +122,7 @@ export default function TopBar({
         {/* Upload Button */}
         <button
           onClick={onOpenUpload}
+          aria-label="Upload documentation"
           className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-md"
           style={{
             background: 'linear-gradient(135deg, #00acc1, #00897b)',
