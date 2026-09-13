@@ -255,6 +255,53 @@ class ChatMessage(Base):
     session = relationship("ChatSession", back_populates="messages")
 
 
+class SensorReading(Base):
+    """Sensor reading sample for predictive maintenance (features + target)."""
+    __tablename__ = "sensor_readings"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    equipment_id = Column(String(36), index=True, nullable=False)
+    equipment_name = Column(String(100), index=True)
+    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+
+    vibration = Column(Float)        # mm/s
+    temperature = Column(Float)      # deg C
+    pressure = Column(Float)         # PSI
+    current = Column(Float)          # Amps
+    noise_level = Column(Float)      # dB
+    operating_hours = Column(Float)
+    maintenance_age_days = Column(Float)
+
+    # Ground-truth target used for training (RUL in days); null for live feeds.
+    remaining_days = Column(Float, nullable=True)
+    is_synthetic = Column(Boolean, default=False)
+
+    __table_args__ = (
+        Index('idx_reading_equipment_time', 'equipment_id', 'timestamp'),
+    )
+
+
+class FailurePrediction(Base):
+    """Saved prediction result from the predictive maintenance engine."""
+    __tablename__ = "failure_predictions"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    equipment_id = Column(String(36), index=True)
+    equipment_name = Column(String(100))
+    predicted_days = Column(Integer)
+    confidence = Column(Float)
+    risk_level = Column(String(20))
+    anomalies_detected = Column(Integer, default=0)
+    recommended_action = Column(String(255))
+    model = Column(String(50), default="random_forest")
+    is_synthetic = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    __table_args__ = (
+        Index('idx_prediction_equipment_time', 'equipment_id', 'created_at'),
+    )
+
+
 class ChatSession(Base):
     """Chat session model for conversation tracking"""
     __tablename__ = "chat_sessions"
@@ -282,7 +329,8 @@ def validate_db():
     inspector = sa_inspect(engine)
     tables = set(inspector.get_table_names())
     required = {"documents", "document_chunks", "document_metadata", "citations",
-                "entities", "relationships", "chat_messages", "chat_sessions"}
+                "entities", "relationships", "chat_messages", "chat_sessions",
+                "sensor_readings", "failure_predictions"}
     missing = required - tables
     if missing:
         raise RuntimeError(f"Missing database tables: {missing}")

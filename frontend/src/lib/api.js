@@ -274,3 +274,20 @@ export function getAnalyticsTimeline(days = 30) {
 export function getEquipmentTypes() {
   return request('/api/analytics/equipment-types').then((r) => r.data);
 }
+
+export function getEquipmentStatus() {
+  return request('/api/predictive/equipment-status').then((r) => r.data);
+}
+
+export function predictFailure(equipmentId) {
+  return request('/api/predictive/predict-failure', {
+    method: 'POST',
+    body: JSON.stringify({ equipment_id: equipmentId }),
+  }).then((r) => r.data);
+}
+
+export function getPredictions({ equipmentId, limit = 20 } = {}) {
+  const params = new URLSearchParams({ limit });
+  if (equipmentId) params.append('equipment_id', equipmentId);
+  return request(`/api/predictive/predictions?${params.toString()}`).then((r) => r.data);
+}

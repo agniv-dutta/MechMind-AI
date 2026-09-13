@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Activity, FileText, Network, MessageSquare, AlertCircle,
-  CheckCircle, Clock, Loader2, RefreshCw,
+  CheckCircle, Clock, Loader2, RefreshCw, Wrench, Cpu,
 } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
 } from 'recharts';
-import { getDashboardMetrics, getAnalyticsTimeline, getEquipmentTypes } from '../lib/api';
+import { getDashboardMetrics, getAnalyticsTimeline, getEquipmentTypes, getEquipmentStatus } from '../lib/api';
 import { useNotifications } from '../context/NotificationContext.jsx';
 
 export function DashboardPage() {
@@ -15,19 +15,22 @@ export function DashboardPage() {
   const [data, setData] = useState(null);
   const [timeline, setTimeline] = useState([]);
   const [equipment, setEquipment] = useState([]);
+  const [predictive, setPredictive] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadAll = useCallback(async () => {
     try {
-      const [metrics, tl, eq] = await Promise.all([
+      const [metrics, tl, eq, pe] = await Promise.all([
         getDashboardMetrics(),
         getAnalyticsTimeline(30),
         getEquipmentTypes(),
+        getEquipmentStatus(),
       ]);
       setData(metrics);
       setTimeline(tl || []);
       setEquipment(eq || []);
+      setPredictive(pe || []);
     } catch (err) {
       notify(`Failed to load dashboard analytics: ${err.message}`, 'error');
     } finally {
@@ -147,6 +150,67 @@ export function DashboardPage() {
             </div>
           </div>
 
+          {/* Predictive Maintenance */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-2xs">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Wrench className="w-5 h-5 text-[#00897b]" />
+                <h3 className="font-bold text-slate-900 text-base">Predictive Maintenance</h3>
+              </div>
+              <span className="text-xs font-medium text-slate-400">
+                RandomForest RUL + anomaly detection
+              </span>
+            </div>
+            {predictive.length === 0 ? (
+              <p className="text-sm text-slate-400 py-8 text-center">
+                No tracked equipment with sensor history yet. Seed sensor data or ingest readings to see predictions.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                      <th className="pb-2 pr-3">Equipment</th>
+                      <th className="pb-2 pr-3">Risk</th>
+                      <th className="pb-2 pr-3">RUL</th>
+                      <th className="pb-2 pr-3">Confidence</th>
+                      <th className="pb-2 pr-3">Anomalies</th>
+                      <th className="pb-2">Suggested Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {predictive.map((row) =>
+                      row.status !== 'prediction_available' ? null : (
+                        <tr key={row.equipment_id} className="border-b border-slate-50">
+                          <td className="py-2.5 pr-3">
+                            <div className="flex items-center gap-2">
+                              <Cpu className="w-4 h-4 text-slate-400" />
+                              <div>
+                                <div className="font-semibold text-slate-800">{row.equipment_id}</div>
+                                <div className="text-xs text-slate-400">{row.equipment_name}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-2.5 pr-3">
+                            <RiskBadge level={row.risk_level} />
+                          </td>
+                          <td className="py-2.5 pr-3 font-mono font-semibold text-slate-900">
+                            {row.predicted_failure_days}d
+                          </td>
+                          <td className="py-2.5 pr-3 text-slate-600">
+                            {Math.round((row.confidence || 0) * 100)}%
+                          </td>
+                          <td className="py-2.5 pr-3 text-slate-600">{row.anomalies_detected || 0}</td>
+                          <td className="py-2.5 text-slate-600">{row.recommended_action}</td>
+                        </tr>
+                      )
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
           {/* Equipment Distribution */}
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-2xs">
             <h3 className="font-bold text-slate-900 text-base mb-4">Equipment Type Distribution</h3>
@@ -198,6 +262,23 @@ function StatusRow({ label, value, icon: Icon, color }) {
       </div>
       <span className="text-xl font-bold text-slate-900">{value}</span>
     </div>
+  );
+}
+
+const RISK_STYLES = {
+  CRITICAL: { bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500' },
+  HIGH: { bg: 'bg-amber-100', text: 'text-amber-700', dot: 'bg-amber-500' },
+  MEDIUM: { bg: 'bg-yellow-100', text: 'text-yellow-700', dot: 'bg-yellow-500' },
+  LOW: { bg: 'bg-emerald-100', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+};
+
+function RiskBadge({ level }) {
+  const style = RISK_STYLES[level] || RISK_STYLES.LOW;
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${style.bg} ${style.text}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+      {level}
+    </span>
   );
 }
 

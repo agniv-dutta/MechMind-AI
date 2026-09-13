@@ -28,13 +28,26 @@ async def lifespan(app: FastAPI):
 
     # 1. Initialize database tables
     try:
-        from app.models.database import init_db, validate_db
+        from app.models.database import init_db, validate_db, SessionLocal
         init_db()
         validate_db()
         logger.info("Database tables verified / created")
     except Exception as e:
         logger.error(f"Database initialization failed: {e}")
         raise
+
+    # 1b. Seed the synthetic sensor fleet used by predictive maintenance (idempotent)
+    try:
+        from app.services.predictive_service import seed_synthetic_readings
+        db = SessionLocal()
+        try:
+            seeded = seed_synthetic_readings(db)
+            if seeded:
+                logger.info(f"Seeded {seeded} synthetic sensor readings for predictive maintenance")
+        finally:
+            db.close()
+    except Exception as e:
+        logger.error(f"Synthetic sensor seed failed (non-fatal): {e}")
 
     # 2. Initialize services
     try:
