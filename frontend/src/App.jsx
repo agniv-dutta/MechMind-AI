@@ -16,6 +16,10 @@ import LandingPage from './pages/LandingPage.jsx';
 import Toasts from './components/common/Toast.jsx';
 import { ErrorBoundary } from './components/common/ErrorBoundary.jsx';
 import { NotificationProvider } from './context/NotificationContext.jsx';
+import BackToTopButton from './components/common/BackToTopButton.jsx';
+import KeyboardShortcutsModal from './components/common/KeyboardShortcutsModal.jsx';
+import GuidedTour from './components/common/GuidedTour.jsx';
+import WhatsNewModal from './components/common/WhatsNewModal.jsx';
 
 // Heavy views are code-split + lazy-loaded so the initial bundle stays small
 // (grid/graph/recharts modules only ship when the matching page opens).
@@ -46,6 +50,9 @@ export default function App() {
   const [selectedDocId, setSelectedDocId] = useState(null);
   const [libraryRefreshKey, setLibraryRefreshKey] = useState(0);
   const [chatPreload, setChatPreload] = useState(null);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [isTourOpen, setIsTourOpen] = useState(false);
+  const [isWhatsNewOpen, setIsWhatsNewOpen] = useState(false);
   const chatSeqRef = useRef(0);
 
   const handleNavigateSettings = (settingsId) => {
@@ -78,7 +85,7 @@ export default function App() {
     else setActiveNav(id);
   };
 
-  // Keyboard shortcuts (Ctrl+K focus global search, Alt+H open help)
+  // Keyboard shortcuts are available from every authenticated workspace view.
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.ctrlKey && (e.key === 'k' || e.key === 'K')) {
@@ -86,12 +93,21 @@ export default function App() {
         document.getElementById('global-search-input')?.focus();
       } else if (e.altKey && (e.key === 'h' || e.key === 'H')) {
         e.preventDefault();
-        setActiveNav('help');
+        setIsShortcutsOpen(true);
+      } else if (e.altKey && (e.key === 't' || e.key === 'T')) {
+        e.preventDefault();
+        setIsWizardModalOpen(true);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  useEffect(() => {
+    if (activeNav === 'landing' || localStorage.getItem('mechmind-tour-complete')) return undefined;
+    const timer = window.setTimeout(() => setIsTourOpen(true), 0);
+    return () => window.clearTimeout(timer);
+  }, [activeNav]);
 
   const skipToContent = useCallback((e) => {
     e.preventDefault();
@@ -101,14 +117,17 @@ export default function App() {
   // Standalone marketing landing page (per landing_page_implementation.md)
   if (activeNav === 'landing') {
     return (
-      <NotificationProvider>
-        <LandingPage onEnter={() => setActiveNav('dashboard')} />
-        <Toasts />
-      </NotificationProvider>
+      <ErrorBoundary>
+        <NotificationProvider>
+          <LandingPage onEnter={() => setActiveNav('dashboard')} />
+          <Toasts />
+        </NotificationProvider>
+      </ErrorBoundary>
     );
   }
 
   return (
+    <ErrorBoundary>
     <NotificationProvider>
     <div className="min-h-screen h-screen flex flex-col bg-slate-50 text-slate-900 overflow-hidden font-sans transition-colors duration-200" style={{ backgroundColor: '#f8fafc' }}>
       {/* Skip-to-content link for keyboard / screen reader users */}
@@ -128,6 +147,9 @@ export default function App() {
         }}
         onOpenUpload={() => setIsUploadModalOpen(true)}
         onOpenWizard={() => setIsWizardModalOpen(true)}
+        onOpenKeyboardShortcuts={() => setIsShortcutsOpen(true)}
+        onOpenTour={() => setIsTourOpen(true)}
+        onOpenWhatsNew={() => setIsWhatsNewOpen(true)}
       />
 
       {/* Main Workspace Container */}
@@ -240,8 +262,13 @@ export default function App() {
         onClose={() => setIsWizardModalOpen(false)}
       />
 
+      <KeyboardShortcutsModal open={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
+      <GuidedTour open={isTourOpen} onClose={() => setIsTourOpen(false)} />
+      <WhatsNewModal open={isWhatsNewOpen} onClose={() => setIsWhatsNewOpen(false)} />
+      <BackToTopButton />
       <Toasts />
     </div>
     </NotificationProvider>
+    </ErrorBoundary>
   );
 }

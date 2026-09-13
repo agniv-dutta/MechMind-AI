@@ -12,6 +12,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { getSearchConfig, updateSearchConfig } from '../lib/api';
+import Tooltip from './common/Tooltip.jsx';
 
 export default function SearchSettings({ onBackToDashboard: _onBackToDashboard, onNavigateSettings }) {
   const [semanticWeight, setSemanticWeight] = useState(0.7);
@@ -151,7 +152,7 @@ export default function SearchSettings({ onBackToDashboard: _onBackToDashboard, 
 
                 <div className="space-y-4 pt-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">HYBRID SEARCH WEIGHTING</label>
+                    <label className="flex items-center gap-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">HYBRID SEARCH WEIGHTING <Tooltip text="Balances semantic similarity against exact technical keywords. A higher semantic weight favors meaning over literal matches." /></label>
                     <span className="bg-teal-100 text-teal-800 text-xs font-mono font-bold px-2.5 py-1 rounded-md border border-teal-500/20">Alpha = {semanticWeight.toFixed(2)}</span>
                   </div>
 
@@ -204,7 +205,7 @@ export default function SearchSettings({ onBackToDashboard: _onBackToDashboard, 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">MIN CONFIDENCE SCORE</label>
+                      <label className="flex items-center gap-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">MIN CONFIDENCE SCORE <Tooltip text="Results below this relevance threshold are excluded from retrieval." /></label>
                       <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 font-mono font-bold text-xs border border-emerald-500/20">{minConfidence}%</span>
                     </div>
                     <input
@@ -223,7 +224,7 @@ export default function SearchSettings({ onBackToDashboard: _onBackToDashboard, 
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">MAX RESULTS</label>
+                      <label className="flex items-center gap-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">MAX RESULTS <Tooltip text="Caps the number of source passages returned for each search." /></label>
                       <span className="px-2 py-0.5 rounded bg-slate-100 font-mono font-bold text-xs text-slate-900 border border-slate-200">{maxResults}</span>
                     </div>
                     <input

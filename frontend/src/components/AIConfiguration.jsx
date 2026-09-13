@@ -18,6 +18,7 @@ import {
   XCircle
 } from 'lucide-react';
 import { getAIConfig, getAIModels, updateAIConfig, testAIConnection } from '../lib/api';
+import Tooltip from './common/Tooltip.jsx';
 
 export default function AIConfiguration({ onBackToDashboard: _onBackToDashboard, onNavigateSettings }) {
   const [showKey, setShowKey] = useState(false);
@@ -155,7 +156,7 @@ export default function AIConfiguration({ onBackToDashboard: _onBackToDashboard,
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">PROVIDER / BACKEND</label>
+                <label className="flex items-center gap-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">PROVIDER / BACKEND <Tooltip text="Selects the service that generates grounded answers. Offline mode remains available if cloud credentials are not configured." /></label>
                 <div className="relative">
                   <select
                     value={provider}
@@ -170,7 +171,7 @@ export default function AIConfiguration({ onBackToDashboard: _onBackToDashboard,
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">ACTIVE MODEL</label>
+                <label className="flex items-center gap-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">ACTIVE MODEL <Tooltip text="The selected model is used for new chat responses after you save this configuration." /></label>
                 <div className="relative">
                   <select
                     value={model}
@@ -187,7 +188,7 @@ export default function AIConfiguration({ onBackToDashboard: _onBackToDashboard,
 
             <div className="space-y-1.5 pt-1">
               <div className="flex items-center justify-between">
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">AUTHENTICATION KEY</label>
+                <label className="flex items-center gap-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">AUTHENTICATION KEY <Tooltip text="Secrets are configured through backend environment variables and are never exposed in the browser." /></label>
                 <span className="text-[10px] font-mono text-slate-500">{keyConfigured ? 'CONFIGURED' : 'NOT SET'}</span>
               </div>
               <div className="relative">

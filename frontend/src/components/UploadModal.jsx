@@ -11,11 +11,13 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { uploadDocument } from '../lib/api';
+import { useNotifications } from '../context/NotificationContext.jsx';
 
 const EQUIPMENT_OPTIONS = ['Turbine', 'Generator', 'Compressor', 'Pump', 'Motor', 'Valve Actuator', 'Heat Exchanger', 'Control Valve', 'Other'];
 const CATEGORY_OPTIONS = ['Service Manual', 'Wiring Diagram', 'Telemetry Specs', 'Maintenance Log', 'Troubleshooting Guide', 'P&ID', 'Other'];
 
 export default function UploadModal({ isOpen, onClose, onUploaded }) {
+  const { notify } = useNotifications();
   const [selectedFile, setSelectedFile] = useState(null);
   const [equipmentType, setEquipmentType] = useState('');
   const [category, setCategory] = useState('');
@@ -80,6 +82,7 @@ export default function UploadModal({ isOpen, onClose, onUploaded }) {
     if (!selectedFile) {
       setErrorMsg('Select a file to upload first');
       setPhase('error');
+      notify('Select a file before uploading.', 'warning');
       return;
     }
     setPhase('uploading');
@@ -100,11 +103,13 @@ export default function UploadModal({ isOpen, onClose, onUploaded }) {
         setPhase('done');
         setProgress(100);
         setResultMsg(result.message || `Processed ${result.pages} page(s), extracted ${result.entities_found} entities`);
+        notify(`${selectedFile.name} uploaded successfully.`, 'success');
         if (onUploaded) onUploaded(result);
       }, 400);
     } catch (err) {
       setPhase('error');
       setErrorMsg(err.message || 'Upload failed');
+      notify(`Upload failed: ${err.message || 'Unknown error'}`, 'error');
     }
   };
 

@@ -13,10 +13,13 @@ import {
   Loader2, 
   FileCode, 
   Layers,
-  AlertTriangle
+  AlertTriangle,
+  Columns2
 } from 'lucide-react';
 import { listDocuments } from '../lib/api';
 import { offlineStorage } from '../services/offlineStorage.js';
+import EmptyState from './common/EmptyState.jsx';
+import DocumentComparison from './DocumentComparison.jsx';
 
 const TYPE_META = {
   'Service Manual': { bg: 'from-slate-950 via-slate-900 to-blue-950', dot: 'bg-blue-600', label: 'MANUAL // REV' },
@@ -68,6 +71,8 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument }) {
   const [searchVal, setSearchVal] = useState('');
   const [docs, setDocs] = useState(null);
   const [error, setError] = useState('');
+  const [comparisonIds, setComparisonIds] = useState([]);
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const { t } = useTranslation();
 
   const load = () => {
@@ -102,6 +107,8 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument }) {
     try { return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); }
     catch { return ''; }
   };
+  const toggleComparison = (id) => setComparisonIds((ids) => ids.includes(id) ? ids.filter((currentId) => currentId !== id) : ids.length < 2 ? [...ids, id] : [ids[1], id]);
+  const comparisonDocs = (docs || []).filter((doc) => comparisonIds.includes(doc.id));
 
   return (
     <div
@@ -172,6 +179,9 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument }) {
             <Upload className="w-4 h-4" />
             <span>{t('documents.upload')}</span>
           </button>
+          <button type="button" onClick={() => setIsComparisonOpen(true)} disabled={comparisonIds.length !== 2} className="bg-white hover:bg-slate-100 border border-slate-200 rounded-lg px-4 py-2 text-sm text-slate-700 font-medium flex items-center gap-2 shadow-2xs transition-colors disabled:cursor-not-allowed disabled:opacity-50" title="Select two document cards to compare">
+            <Columns2 className="w-4 h-4 text-teal-600" /> Compare ({comparisonIds.length}/2)
+          </button>
         </div>
 
       </div>
@@ -184,15 +194,18 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument }) {
           </div>
         </div>
       ) : error ? (
-        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-sm font-semibold text-red-700 flex items-center space-x-2">
-          <AlertTriangle className="w-4 h-4" />
-          <span>{error}</span>
+        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-sm font-semibold text-red-700 flex items-center justify-between gap-4">
+          <span className="flex items-center space-x-2"><AlertTriangle className="w-4 h-4" /><span>{error}</span></span>
+          <button type="button" onClick={load} className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-bold hover:bg-red-50">Retry</button>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-3">
-          <FileText className="w-10 h-10 text-slate-300" />
-          <p className="text-sm text-slate-500">No documents found.</p>
-        </div>
+        <EmptyState
+          icon={FileText}
+          title={searchVal ? 'No matching documents' : 'No documents uploaded yet'}
+          description={searchVal ? 'Try a different filename, equipment type, or tag.' : 'Upload a manual, diagram, or report to begin building your knowledge base.'}
+          actionLabel={searchVal ? 'Clear search' : 'Upload document'}
+          onAction={searchVal ? () => setSearchVal('') : onOpenUpload}
+        />
       ) : viewMode === 'list' ? (
         <div className="space-y-3">
           {filtered.map((d) => (
@@ -255,6 +268,10 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument }) {
                       {formatDate(d.uploaded_at)} • {d.pages_count || 0} pages
                     </p>
 
+                    <label className="flex w-fit cursor-pointer items-center gap-2 text-xs font-semibold text-slate-600" onClick={(event) => event.stopPropagation()}>
+                      <input type="checkbox" checked={comparisonIds.includes(d.id)} onChange={() => toggleComparison(d.id)} className="h-3.5 w-3.5 accent-teal-600" />
+                      Compare this document
+                    </label>
                     <div className="flex flex-wrap gap-1.5 pt-2">
                       {d.equipment_type && (
                         <span className="px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-[#1E293B] text-white">
@@ -297,6 +314,7 @@ export default function DocumentLibrary({ onOpenUpload, onSelectDocument }) {
         </div>
       )}
 
+      {isComparisonOpen && <DocumentComparison documents={comparisonDocs} onClose={() => setIsComparisonOpen(false)} />}
     </div>
   );
 }

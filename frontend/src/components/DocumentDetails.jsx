@@ -16,10 +16,14 @@ import {
   CircuitBoard,
   Waypoints,
   ScanSearch,
+  Download,
 } from 'lucide-react';
 import { getDocument, getDocumentPage, listDocuments, deleteDocument, analyzeDocumentDiagram } from '../lib/api';
 import { offlineStorage } from '../services/offlineStorage.js';
 import DiagramViewer from './DiagramViewer';
+import ConfirmDialog from './common/ConfirmDialog.jsx';
+import Breadcrumbs from './common/Breadcrumbs.jsx';
+import { useNotifications } from '../context/NotificationContext.jsx';
 
 const TYPE_ICONS = {
   Equipment: Printer,
@@ -30,6 +34,7 @@ const TYPE_ICONS = {
 };
 
 export default function DocumentDetails({ documentId, onBack, onDelete }) {
+  const { notify } = useNotifications();
   const [activeTab, setActiveTab] = useState('entities');
   const [activePage, setActivePage] = useState(1);
   const [zoomLevel, setZoomLevel] = useState(100);
@@ -42,6 +47,7 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
   const [diagram, setDiagram] = useState(null);
   const [diagramLoading, setDiagramLoading] = useState(false);
   const [diagramError, setDiagramError] = useState('');
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
 
   const isImage = () => {
     const type = (summary?.file_type || doc?.file_type || '').toLowerCase();
@@ -55,9 +61,11 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
     try {
       const res = await analyzeDocumentDiagram(documentId);
       setDiagram(res.diagram);
+      notify('Diagram analysis completed.', 'success');
     } catch (err) {
       setDiagramError(err.message || 'Diagram analysis failed');
       setDiagram(null);
+      notify(`Diagram analysis failed: ${err.message || 'Unknown error'}`, 'error');
     } finally {
       setDiagramLoading(false);
     }
@@ -103,15 +111,16 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
   }, [doc, summary, pageText]);
 
   const handleDelete = async () => {
-    if (!window.confirm(`Delete "${summary?.filename || doc?.filename}"? This cannot be undone.`)) return;
     setDeleting(true);
     try {
       await deleteDocument(documentId);
       offlineStorage.deleteDocument(documentId).catch(() => {});
+      notify('Document deleted successfully.', 'success');
       if (onDelete) onDelete(documentId);
       else if (onBack) onBack();
     } catch (err) {
       setError(err.message || 'Delete failed');
+      notify(`Failed to delete document: ${err.message || 'Unknown error'}`, 'error');
       setDeleting(false);
     }
   };
@@ -161,6 +170,7 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
         padding: '24px',
       }}
     >
+            <Breadcrumbs items={[{ label: 'Documents', onClick: onBack }, { label: doc.filename || 'Document details' }]} />
             {/* 1. Page Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
               <div className="flex items-center space-x-4">
@@ -197,6 +207,9 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
                     {diagramLoading ? 'Analyzing…' : 'Analyze Diagram'}
                   </button>
                 )}
+                <button type="button" onClick={() => window.print()} className="no-print flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold hover:bg-slate-50" title="Open the print dialog to save this document view as PDF">
+                  <Download className="w-4 h-4" /> Export PDF
+                </button>
                 <div className={`text-xs px-3 py-1.5 rounded-full font-medium flex items-center gap-1.5 border ${
                   status === 'complete'
                     ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20'
@@ -205,7 +218,7 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
                   <span className={`w-2 h-2 rounded-full ${status === 'complete' ? 'bg-emerald-500' : 'bg-teal-500 animate-ping'}`}></span>
                   <span>{status === 'complete' ? 'Complete' : 'Processing'}</span>
                 </div>
-                <button onClick={handleDelete} disabled={deleting} className="text-red-500 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors" title="Delete document">
+                <button onClick={() => setShowDeleteConfirmation(true)} disabled={deleting} className="text-red-500 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors" title="Delete document" aria-label="Delete document">
                   {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                 </button>
               </div>
@@ -442,6 +455,15 @@ export default function DocumentDetails({ documentId, onBack, onDelete }) {
           )}
         </div>
       )}
+      <ConfirmDialog
+        open={showDeleteConfirmation}
+        title="Delete this document?"
+        message={`“${summary?.filename || doc?.filename}” and its indexed content will be permanently removed. This action cannot be undone.`}
+        confirmLabel="Delete document"
+        busy={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteConfirmation(false)}
+      />
     </div>
   );
 }

@@ -161,3 +161,16 @@
   color: #00897b;
   font-weight: 600;
 }
+
+@media print {
+  @page { margin: 14mm; }
+  body { background: #fff !important; color: #000 !important; overflow: visible !important; }
+  #root, main, [role="main"] { height: auto !important; overflow: visible !important; }
+  .no-print, header, aside, button, .fixed { display: none !important; }
+  .overflow-y-auto, .overflow-hidden { overflow: visible !important; height: auto !important; }
+  .shadow-2xl, .shadow-lg, .shadow-md, .shadow-sm { box-shadow: none !important; }
+  .bg-slate-50, .bg-slate-100\/60 { background: #fff !important; }
+  .rounded-2xl, .rounded-xl { border-radius: 0 !important; }
+  article, section, .break-inside-avoid { break-inside: avoid; }
+  mark { background: #fde68a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

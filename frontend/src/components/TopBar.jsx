@@ -6,6 +6,9 @@ import {
   ChevronDown,
   Upload,
   Sparkles,
+  Keyboard,
+  Compass,
+  Bell,
 } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 
@@ -14,6 +17,9 @@ export default function TopBar({
   setSearchQuery,
   onOpenUpload,
   onOpenWizard,
+  onOpenKeyboardShortcuts,
+  onOpenTour,
+  onOpenWhatsNew,
 }) {
   const { t } = useTranslation();
   return (
@@ -101,6 +107,17 @@ export default function TopBar({
 
       {/* ── Right: Action Buttons & Profile ─────────────────────────────── */}
       <div className="flex items-center gap-3">
+        <button type="button" onClick={onOpenTour} className="hidden lg:flex items-center justify-center rounded-lg p-2 text-white/70 transition-colors hover:bg-white/10 hover:text-white" aria-label="Start guided tour" title="Guided tour"><Compass className="w-4 h-4" /></button>
+        <button type="button" onClick={onOpenWhatsNew} className="hidden lg:flex items-center justify-center rounded-lg p-2 text-white/70 transition-colors hover:bg-white/10 hover:text-white" aria-label="View what’s new" title="What’s new"><Bell className="w-4 h-4" /></button>
+        <button
+          type="button"
+          onClick={onOpenKeyboardShortcuts}
+          className="hidden lg:flex items-center justify-center rounded-lg p-2 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+          aria-label="Show keyboard shortcuts"
+          title="Keyboard shortcuts (Alt + H)"
+        >
+          <Keyboard className="w-4 h-4" />
+        </button>
         {/* Troubleshooting Wizard Action Button */}
         <button
           onClick={onOpenWizard}

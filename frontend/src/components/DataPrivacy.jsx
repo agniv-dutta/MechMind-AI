@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Settings as SettingsIcon,
   Shield,
@@ -12,8 +12,29 @@ import {
   ExternalLink,
   Save
 } from 'lucide-react';
+import ConfirmDialog from './common/ConfirmDialog.jsx';
+import { offlineStorage } from '../services/offlineStorage.js';
+import { useNotifications } from '../context/NotificationContext.jsx';
 
 export default function DataPrivacy({ onBackToDashboard, onNavigateSettings }) {
+  const { notify } = useNotifications();
+  const [confirmation, setConfirmation] = useState(null);
+  const [busy, setBusy] = useState(false);
+
+  const executeDestructiveAction = async () => {
+    if (!confirmation) return;
+    setBusy(true);
+    try {
+      if (confirmation.kind === 'cache') await offlineStorage.clearDocuments();
+      if (confirmation.kind === 'wipe') await offlineStorage.clearAllLocalData();
+      notify(confirmation.success, 'success');
+      setConfirmation(null);
+    } catch (error) {
+      notify(`Action failed: ${error.message || 'Unknown error'}`, 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
   const menuItems = [
     { id: 'settings', label: 'General' },
     { id: 'ai', label: 'AI Configuration' },
@@ -125,7 +146,7 @@ export default function DataPrivacy({ onBackToDashboard, onNavigateSettings }) {
                 <p className="text-xs text-slate-500">
                   Clear local embeddings to free space and reset AI context.
                 </p>
-                <button className="w-full border border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white font-semibold text-xs py-2 rounded-xl text-center flex items-center justify-center gap-1.5 transition-colors mt-2">
+                <button type="button" onClick={() => setConfirmation({ kind: 'cache', title: 'Purge local vector cache?', message: 'This removes downloaded document embeddings from this browser only. Your uploaded documents remain available on the server.', success: 'Local vector cache cleared.' })} className="w-full border border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white font-semibold text-xs py-2 rounded-xl text-center flex items-center justify-center gap-1.5 transition-colors mt-2">
                   <span>Initialize Purge</span>
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -141,10 +162,10 @@ export default function DataPrivacy({ onBackToDashboard, onNavigateSettings }) {
                 <span>Critical: Data Eradication</span>
               </h2>
               <p className="text-xs text-slate-500 mt-1">
-                Permanently wipe all conversational history and fine-tuning data associated with this terminal.
+                Permanently remove locally cached documents, search history, and chat history from this browser.
               </p>
             </div>
-            <button className="border border-red-500 text-red-600 hover:bg-red-50 text-xs font-bold px-4 py-2.5 rounded-xl uppercase tracking-wider transition-colors shrink-0">
+            <button type="button" onClick={() => setConfirmation({ kind: 'wipe', title: 'Erase all local data?', message: 'This permanently removes locally cached documents, searches, and chat history from this browser. It cannot be undone.', success: 'All local browser data has been erased.' })} className="border border-red-500 text-red-600 hover:bg-red-50 text-xs font-bold px-4 py-2.5 rounded-xl uppercase tracking-wider transition-colors shrink-0">
               INITIATE WIPE
             </button>
           </div>
@@ -228,6 +249,15 @@ export default function DataPrivacy({ onBackToDashboard, onNavigateSettings }) {
 
       </div>
 
+      <ConfirmDialog
+        open={Boolean(confirmation)}
+        title={confirmation?.title || ''}
+        message={confirmation?.message || ''}
+        confirmLabel={confirmation?.kind === 'wipe' ? 'Erase local data' : 'Purge cache'}
+        busy={busy}
+        onConfirm={executeDestructiveAction}
+        onCancel={() => !busy && setConfirmation(null)}
+      />
     </div>
   );
 }

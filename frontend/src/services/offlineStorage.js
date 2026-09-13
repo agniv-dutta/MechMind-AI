@@ -97,6 +97,13 @@ class OfflineStorage {
     return true;
   }
 
+  async clearDocuments() {
+    await this.init();
+    if (!this.db) return false;
+    await this._request(this._store('documents', 'readwrite').clear());
+    return true;
+  }
+
   // ── searches ───────────────────────────────────────────────────────
   async saveSearch(query, resultsCount) {
     await this.init();
@@ -117,6 +124,13 @@ class OfflineStorage {
     return this._request(this._store('searches', 'readonly').getAll());
   }
 
+  async clearSearches() {
+    await this.init();
+    if (!this.db) return false;
+    await this._request(this._store('searches', 'readwrite').clear());
+    return true;
+  }
+
   // ── chat history ───────────────────────────────────────────────────
   async saveChat(chat) {
     await this.init();
@@ -135,6 +149,18 @@ class OfflineStorage {
     await this.init();
     if (!this.db) return false;
     await this._request(this._store('chat_history', 'readwrite').clear());
+    return true;
+  }
+
+  async clearAllLocalData() {
+    await this.init();
+    if (!this.db) return false;
+    const transaction = this.db.transaction(['documents', 'searches', 'chat_history'], 'readwrite');
+    ['documents', 'searches', 'chat_history'].forEach((store) => transaction.objectStore(store).clear());
+    await new Promise((resolve, reject) => {
+      transaction.oncomplete = () => resolve(true);
+      transaction.onerror = () => reject(transaction.error);
+    });
     return true;
   }
 }

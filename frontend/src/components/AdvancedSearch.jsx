@@ -8,14 +8,19 @@ import {
   ArrowRight,
   Sparkles,
   Loader2,
-  AlertTriangle
+  AlertTriangle,
+  Copy
 } from 'lucide-react';
 import { search } from '../lib/api';
+import EmptyState from './common/EmptyState.jsx';
+import HighlightedText from './common/HighlightedText.jsx';
+import { useNotifications } from '../context/NotificationContext.jsx';
 
 const EQUIPMENT_CLASS = ['Pump', 'Turbine', 'Generator', 'Compressor', 'Motor', 'Valve'];
 const DOC_TYPES = ['Manual', 'Guide', 'Log', 'Report'];
 
 export default function AdvancedSearch({ initialQuery = '', onUseInChat, onViewDoc }) {
+  const { notify } = useNotifications();
   const [query, setQuery] = useState(initialQuery || '');
   const [equipmentClass, setEquipmentClass] = useState('');
   const [docType, setDocType] = useState('');
@@ -66,6 +71,10 @@ export default function AdvancedSearch({ initialQuery = '', onUseInChat, onViewD
     setConfidence(0);
     setEngineMode('hybrid');
     setResults(null);
+  };
+  const copyResult = async (result) => {
+    try { await navigator.clipboard.writeText(`${result.source_doc || 'Search result'} (page ${result.page ?? 1})\n\n${result.content || ''}`); notify('Search result copied to clipboard.', 'success'); }
+    catch { notify('Unable to copy the result. Please check browser permissions.', 'error'); }
   };
 
   const filteredResults = (results?.results || []).filter((r) => {
@@ -230,10 +239,7 @@ export default function AdvancedSearch({ initialQuery = '', onUseInChat, onViewD
       {results && !loading && !error && (
         <div className="space-y-4">
           {filteredResults.length === 0 && (
-            <div className="py-10 text-center">
-              <FileText className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-              <p className="text-xs text-slate-400">No matching results. Try adjusting the filters or query.</p>
-            </div>
+            <EmptyState icon={FileText} title="No matching results" description="Try adjusting your query or filters." actionLabel="Clear filters" onAction={clearAll} />
           )}
           {filteredResults.map((r, i) => {
             const scorePct = Math.min(100, Math.round((r.score || 0) * 100));
@@ -263,7 +269,7 @@ export default function AdvancedSearch({ initialQuery = '', onUseInChat, onViewD
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-slate-50 text-xs text-slate-700 leading-relaxed border border-slate-200/60 line-clamp-4">
-                  {r.content}
+                  <HighlightedText text={r.content} query={query} />
                 </div>
 
                 <div className="flex items-center justify-between pt-1">
@@ -286,6 +292,9 @@ export default function AdvancedSearch({ initialQuery = '', onUseInChat, onViewD
                     >
                       <span>View Document</span>
                       <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => copyResult(r)} className="text-xs font-semibold text-slate-700 hover:text-slate-900 flex items-center gap-1 transition-colors" title="Copy result and citation">
+                      <Copy className="w-3.5 h-3.5" /><span>Copy</span>
                     </button>
                   </div>
                 </div>
